@@ -477,7 +477,15 @@ function capturePhoto(video, captureCanvas, stream) {
     captureCanvas.getContext('2d').drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
     
     const imageDataUrl = captureCanvas.toDataURL('image/png');
-    createImageElement(imageDataUrl, 'image/png');
+    createImageElement(imageDataUrl, 'image/png')
+        .then(newImage => {
+            elements.push(newImage);
+            selectedElement = newImage;
+            drawAll();
+        })
+        .catch(error => {
+            console.error("Failed to create image element:", error);
+        });
 
     // Stop the camera stream and hide the video element
     stream.getTracks().forEach(track => track.stop());
