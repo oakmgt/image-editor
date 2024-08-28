@@ -69,6 +69,8 @@ function handleImageUpload(e) {
             reader.readAsDataURL(file);
         }
     }
+    // Clear the file input
+    e.target.value = '';
 }
 
 function addText() {
