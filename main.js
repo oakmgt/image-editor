@@ -9,28 +9,31 @@ function init() {
     ctx = canvas.getContext('2d');
     resizeCanvas();
 
-    canvas.addEventListener('dragover', handleDragOver);
-    canvas.addEventListener('drop', handleDrop);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('wheel', handleWheel);
-    window.addEventListener('resize', resizeCanvas);
-    document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
-    document.getElementById('addTextBtn').addEventListener('click', addText);
+    // Load fonts before initializing the rest of the application
+    document.fonts.ready.then(() => {
+        canvas.addEventListener('dragover', handleDragOver);
+        canvas.addEventListener('drop', handleDrop);
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('wheel', handleWheel);
+        window.addEventListener('resize', resizeCanvas);
+        document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
+        document.getElementById('addTextBtn').addEventListener('click', addText);
 
-    // Text control event listeners
-    document.getElementById('textInput').addEventListener('input', updateSelectedText);
-    document.getElementById('fontSelect').addEventListener('change', updateSelectedText);
-    document.getElementById('fontSize').addEventListener('input', updateSelectedText);
-    document.getElementById('fontColor').addEventListener('input', updateSelectedText);
-    document.getElementById('outlineColor').addEventListener('input', updateSelectedText);
-    document.getElementById('outlineThickness').addEventListener('input', updateSelectedText);
-    document.getElementById('shadowBlur').addEventListener('input', updateSelectedText);
-    document.getElementById('shadowColor').addEventListener('input', updateSelectedText);
+        // Text control event listeners
+        document.getElementById('textInput').addEventListener('input', updateSelectedText);
+        document.getElementById('fontSelect').addEventListener('change', updateSelectedText);
+        document.getElementById('fontSize').addEventListener('input', updateSelectedText);
+        document.getElementById('fontColor').addEventListener('input', updateSelectedText);
+        document.getElementById('outlineColor').addEventListener('input', updateSelectedText);
+        document.getElementById('outlineThickness').addEventListener('input', updateSelectedText);
+        document.getElementById('shadowBlur').addEventListener('input', updateSelectedText);
+        document.getElementById('shadowColor').addEventListener('input', updateSelectedText);
 
-    // Hide text controls initially
-    hideTextControls();
+        // Hide text controls initially
+        hideTextControls();
+    });
 }
 
 function addText() {
