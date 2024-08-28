@@ -664,13 +664,32 @@ function handleDrop(e) {
             } else if (e.dataTransfer.items[i].kind === 'string') {
                 e.dataTransfer.items[i].getAsString((text) => {
                     console.log('String detected:', text);
-                    const urlMatch = text.match(/https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp)/i);
+                    const urlMatch = text.match(/https?:\/\/[^\s]+/);
                     if (urlMatch) {
-                        const imageUrl = urlMatch[0];
-                        console.log('Image URL detected:', imageUrl);
-                        createImageElement(imageUrl, 'image/' + imageUrl.split('.').pop().toLowerCase());
-                        processed = true;
+                        const url = urlMatch[0];
+                        console.log('URL detected:', url);
+                        fetch(url)
+                            .then(response => response.text())
+                            .then(html => {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(html, 'text/html');
+                                const ogImage = doc.querySelector('meta[property="og:image"]');
+                                if (ogImage) {
+                                    const imageUrl = ogImage.getAttribute('content');
+                                    console.log('Image URL detected:', imageUrl);
+                                    createImageElement(imageUrl, 'image/' + imageUrl.split('.').pop().toLowerCase());
+                                    processed = true;
+                                } else {
+                                    console.log('No og:image found in the URL');
+                                    hideLoadingIndicator();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching URL:', error);
+                                hideLoadingIndicator();
+                            });
                     } else {
+                        console.log('No URL detected in the dropped content');
                         hideLoadingIndicator();
                     }
                 });
