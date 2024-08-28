@@ -160,31 +160,11 @@ function startCamera() {
         return;
     }
 
-    // First, check if we already have permission
-    navigator.permissions.query({name: 'camera'})
-        .then(permissionStatus => {
-            if (permissionStatus.state === 'granted') {
-                // Permission already granted, proceed with camera access
-                accessCamera(video, captureCanvas);
-            } else {
-                // We need to request permission
-                alert('We need your permission to access the camera. Please click "Allow" in the upcoming prompt.');
-                // After alerting the user, try to access the camera which will trigger the permission prompt
-                accessCamera(video, captureCanvas);
-            }
-        })
-        .catch(error => {
-            console.error('Error checking camera permission:', error);
-            // If we can't check permissions, try to access the camera anyway
-            accessCamera(video, captureCanvas);
-        });
-}
-
-function accessCamera(video, captureCanvas) {
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
             video.classList.remove('hidden');
+            video.play();
             
             // Add capture button
             const captureBtn = document.createElement('button');
@@ -215,6 +195,7 @@ function capturePhoto(video, captureCanvas, stream) {
 
     // Stop the camera stream and hide the video element
     stream.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
     video.classList.add('hidden');
     
     // Remove the capture button
