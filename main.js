@@ -31,8 +31,13 @@ function init() {
         document.getElementById('shadowBlur').addEventListener('input', updateSelectedText);
         document.getElementById('shadowColor').addEventListener('input', updateSelectedText);
 
+        // Layer control event listeners
+        document.getElementById('moveUpBtn').addEventListener('click', moveLayerUp);
+        document.getElementById('moveDownBtn').addEventListener('click', moveLayerDown);
+
         // Hide text controls initially
         hideTextControls();
+        hideLayerControls();
     });
 }
 
@@ -214,10 +219,13 @@ function handleMouseDown(e) {
 
     if (selectedImage) {
         hideTextControls();
+        showLayerControls();
     } else if (selectedText) {
         showTextControls(selectedText);
+        showLayerControls();
     } else {
         hideTextControls();
+        hideLayerControls();
     }
 
     drawAll();
@@ -248,6 +256,56 @@ function updateTextControlsPosition() {
 
 function hideTextControls() {
     document.getElementById('textControls').style.display = 'none';
+}
+
+function showLayerControls() {
+    const layerControls = document.getElementById('layerControls');
+    layerControls.style.display = 'block';
+    updateLayerControlsPosition();
+}
+
+function hideLayerControls() {
+    document.getElementById('layerControls').style.display = 'none';
+}
+
+function updateLayerControlsPosition() {
+    if (selectedImage || selectedText) {
+        const layerControls = document.getElementById('layerControls');
+        const object = selectedImage || selectedText;
+        const bounds = object.img ? object : getTextBounds(object);
+        layerControls.style.left = `${bounds.x}px`;
+        layerControls.style.top = `${bounds.y + bounds.height + 10}px`;
+    }
+}
+
+function moveLayerUp() {
+    if (selectedImage) {
+        const index = images.indexOf(selectedImage);
+        if (index < images.length - 1) {
+            [images[index], images[index + 1]] = [images[index + 1], images[index]];
+        }
+    } else if (selectedText) {
+        const index = texts.indexOf(selectedText);
+        if (index < texts.length - 1) {
+            [texts[index], texts[index + 1]] = [texts[index + 1], texts[index]];
+        }
+    }
+    drawAll();
+}
+
+function moveLayerDown() {
+    if (selectedImage) {
+        const index = images.indexOf(selectedImage);
+        if (index > 0) {
+            [images[index], images[index - 1]] = [images[index - 1], images[index]];
+        }
+    } else if (selectedText) {
+        const index = texts.indexOf(selectedText);
+        if (index > 0) {
+            [texts[index], texts[index - 1]] = [texts[index - 1], texts[index]];
+        }
+    }
+    drawAll();
 }
 
 function handleMouseMove(e) {
