@@ -89,6 +89,10 @@ function setupLayerControlListeners() {
             moveLayerDown();
         } else if (event.target.id === 'deleteBtn' || event.target.closest('#deleteBtn')) {
             deleteSelectedElement();
+        } else if (event.target.id === 'flipHorizontalBtn' || event.target.closest('#flipHorizontalBtn')) {
+            flipSelectedElement('horizontal');
+        } else if (event.target.id === 'flipVerticalBtn' || event.target.closest('#flipVerticalBtn')) {
+            flipSelectedElement('vertical');
         } else if (event.target.id === 'effectsBtn' || event.target.closest('#effectsBtn')) {
             toggleEffectsDropdown();
         } else if (event.target.closest('#effectsDropdown')) {
@@ -101,6 +105,25 @@ function setupLayerControlListeners() {
             document.getElementById('effectsDropdown').classList.add('hidden');
         }
     });
+}
+
+function flipSelectedElement(direction) {
+    if (selectedElement) {
+        if (selectedElement.type === 'image') {
+            if (direction === 'horizontal') {
+                selectedElement.scaleX = (selectedElement.scaleX || 1) * -1;
+            } else if (direction === 'vertical') {
+                selectedElement.scaleY = (selectedElement.scaleY || 1) * -1;
+            }
+        } else if (selectedElement.type === 'text') {
+            if (direction === 'horizontal') {
+                selectedElement.scaleX = (selectedElement.scaleX || 1) * -1;
+            } else if (direction === 'vertical') {
+                selectedElement.scaleY = (selectedElement.scaleY || 1) * -1;
+            }
+        }
+        drawAll();
+    }
 }
 
 function toggleEffectsDropdown() {
@@ -249,6 +272,7 @@ function drawImage(img) {
     ctx.save();
     ctx.translate(img.x + img.width / 2, img.y + img.height / 2);
     ctx.rotate(img.angle);
+    ctx.scale(img.scaleX || 1, img.scaleY || 1);
     ctx.drawImage(img.img, -img.width / 2, -img.height / 2, img.width, img.height);
     ctx.restore();
 }
@@ -257,6 +281,7 @@ function drawText(text) {
     ctx.save();
     ctx.translate(text.x, text.y);
     ctx.rotate(text.angle);
+    ctx.scale(text.scaleX || 1, text.scaleY || 1);
     ctx.font = `${text.size}px ${text.font}`;
     ctx.fillStyle = text.color;
     ctx.strokeStyle = text.outlineColor;
