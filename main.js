@@ -181,49 +181,91 @@ function applyEffect(effect) {
 function applyEffectToImageData(effect, originalImageData, effectImageData) {
     const data = originalImageData.data;
     const effectData = effectImageData.data;
+    const width = originalImageData.width;
+    const height = originalImageData.height;
 
-    for (let i = 0; i < data.length; i += 4) {
-        switch (effect) {
-            case 'blackAndWhite':
-                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                effectData[i] = effectData[i + 1] = effectData[i + 2] = avg > 128 ? 255 : 0;
-                break;
-            case 'grayscale':
-                const grayAvg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                effectData[i] = effectData[i + 1] = effectData[i + 2] = grayAvg;
-                break;
-            case 'deepFry':
-                // Increase contrast
-                effectData[i] = Math.min(255, Math.max(0, (data[i] - 128) * 2 + 128));
-                effectData[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 2 + 128));
-                effectData[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 2 + 128));
-
-                // Increase saturation
-                const deepFryAvg = (effectData[i] + effectData[i + 1] + effectData[i + 2]) / 3;
-                effectData[i] = Math.min(255, deepFryAvg + (effectData[i] - deepFryAvg) * 2);
-                effectData[i + 1] = Math.min(255, deepFryAvg + (effectData[i + 1] - deepFryAvg) * 2);
-                effectData[i + 2] = Math.min(255, deepFryAvg + (effectData[i + 2] - deepFryAvg) * 2);
-
-                // Add noise
-                if (Math.random() < 0.05) {
-                    effectData[i] = effectData[i + 1] = effectData[i + 2] = 255;
-                }
-                break;
-            case 'invert':
-                effectData[i] = 255 - data[i];
-                effectData[i + 1] = 255 - data[i + 1];
-                effectData[i + 2] = 255 - data[i + 2];
-                break;
-            case 'sepia':
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                effectData[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-                effectData[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-                effectData[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-                break;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            switch (effect) {
+                case 'blackAndWhite':
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    effectData[i] = effectData[i + 1] = effectData[i + 2] = avg > 128 ? 255 : 0;
+                    break;
+                case 'grayscale':
+                    const grayAvg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    effectData[i] = effectData[i + 1] = effectData[i + 2] = grayAvg;
+                    break;
+                case 'deepFry':
+                    // Increase contrast and saturation
+                    for (let j = 0; j < 3; j++) {
+                        effectData[i + j] = Math.min(255, Math.max(0, (data[i + j] - 128) * 2 + 128));
+                    }
+                    // Add noise
+                    if (Math.random() < 0.05) {
+                        effectData[i] = effectData[i + 1] = effectData[i + 2] = 255;
+                    }
+                    break;
+                case 'invert':
+                    effectData[i] = 255 - data[i];
+                    effectData[i + 1] = 255 - data[i + 1];
+                    effectData[i + 2] = 255 - data[i + 2];
+                    break;
+                case 'sepia':
+                    effectData[i] = Math.min(255, (data[i] * 0.393) + (data[i + 1] * 0.769) + (data[i + 2] * 0.189));
+                    effectData[i + 1] = Math.min(255, (data[i] * 0.349) + (data[i + 1] * 0.686) + (data[i + 2] * 0.168));
+                    effectData[i + 2] = Math.min(255, (data[i] * 0.272) + (data[i + 1] * 0.534) + (data[i + 2] * 0.131));
+                    break;
+                case 'pixelate':
+                    const pixelSize = 10;
+                    const px = Math.floor(x / pixelSize) * pixelSize;
+                    const py = Math.floor(y / pixelSize) * pixelSize;
+                    const pixelIndex = (py * width + px) * 4;
+                    effectData[i] = data[pixelIndex];
+                    effectData[i + 1] = data[pixelIndex + 1];
+                    effectData[i + 2] = data[pixelIndex + 2];
+                    break;
+                case 'vaporwave':
+                    effectData[i] = Math.min(255, data[i] + 50);
+                    effectData[i + 1] = data[i + 1];
+                    effectData[i + 2] = Math.min(255, data[i + 2] + 50);
+                    break;
+                case 'glitch':
+                    if (Math.random() < 0.1) {
+                        const offset = Math.floor(Math.random() * 20) - 10;
+                        const glitchIndex = ((y + offset + height) % height * width + x) * 4;
+                        effectData[i] = data[glitchIndex];
+                        effectData[i + 1] = data[glitchIndex + 1];
+                        effectData[i + 2] = data[glitchIndex + 2];
+                    } else {
+                        effectData[i] = data[i];
+                        effectData[i + 1] = data[i + 1];
+                        effectData[i + 2] = data[i + 2];
+                    }
+                    break;
+                case 'oil':
+                    const radius = 4;
+                    const intensity = 30;
+                    let r = 0, g = 0, b = 0, count = 0;
+                    for (let oy = -radius; oy <= radius; oy++) {
+                        for (let ox = -radius; ox <= radius; ox++) {
+                            const sx = Math.min(Math.max(x + ox, 0), width - 1);
+                            const sy = Math.min(Math.max(y + oy, 0), height - 1);
+                            const sIndex = (sy * width + sx) * 4;
+                            const weight = Math.floor((data[sIndex] + data[sIndex + 1] + data[sIndex + 2]) / 3 / (256 / intensity)) * (256 / intensity);
+                            r += data[sIndex] * weight;
+                            g += data[sIndex + 1] * weight;
+                            b += data[sIndex + 2] * weight;
+                            count += weight;
+                        }
+                    }
+                    effectData[i] = r / count;
+                    effectData[i + 1] = g / count;
+                    effectData[i + 2] = b / count;
+                    break;
+            }
+            effectData[i + 3] = data[i + 3]; // Keep original alpha
         }
-        effectData[i + 3] = data[i + 3]; // Keep original alpha
     }
 }
 
