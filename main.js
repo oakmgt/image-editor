@@ -626,28 +626,39 @@ function handleDragOver(e) {
 
 function handleDrop(e) {
     e.preventDefault();
+    console.log('Drop event triggered');
+    
     if (e.dataTransfer.files.length > 0) {
+        console.log('Files detected:', e.dataTransfer.files);
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
+            console.log('Processing file:', file.name, 'Type:', file.type);
             processUploadedFile(file);
         }
     } else if (e.dataTransfer.items) {
+        console.log('DataTransferItemList detected');
         for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            console.log('Item:', i, 'Kind:', e.dataTransfer.items[i].kind, 'Type:', e.dataTransfer.items[i].type);
             if (e.dataTransfer.items[i].kind === 'file') {
                 const file = e.dataTransfer.items[i].getAsFile();
                 if (file && file.type.startsWith('image/')) {
+                    console.log('Processing file from item:', file.name, 'Type:', file.type);
                     processUploadedFile(file);
                     break;
                 }
             } else if (e.dataTransfer.items[i].kind === 'string' && e.dataTransfer.items[i].type === 'text/uri-list') {
                 e.dataTransfer.items[i].getAsString((url) => {
+                    console.log('URL detected:', url);
                     if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+                        console.log('Creating image element from URL');
                         createImageElement(url, 'image/' + url.split('.').pop());
                     }
                 });
                 break;
             }
         }
+    } else {
+        console.log('No recognized data in the drop event');
     }
 }
 
