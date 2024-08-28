@@ -1,10 +1,15 @@
 // Constants
-const HANDLE_SIZE = 20; // Increased for better touch interaction
+const HANDLE_SIZE = 20; // Size of resize/rotate handles
+const MIN_DIMENSION = 100; // Minimum width or height for images
+const LOADING_INDICATOR_ID = 'loadingIndicator';
 
 // Global variables
 let canvas, ctx;
-let elements = [], selectedElement = null;
-let isDragging = false, isResizing = false, isRotating = false;
+let elements = [];
+let selectedElement = null;
+let isDragging = false;
+let isResizing = false;
+let isRotating = false;
 let startX, startY;
 let isMobile = false;
 
@@ -13,12 +18,12 @@ function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     resizeCanvas();
-    checkMobile();
+    detectMobileDevice();
 
     document.fonts.ready.then(setupEventListeners);
 }
 
-function checkMobile() {
+function detectMobileDevice() {
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (isMobile) {
         adjustUIForMobile();
@@ -44,6 +49,16 @@ function adjustUIForMobile() {
 }
 
 function setupEventListeners() {
+    addCanvasEventListeners();
+    addButtonEventListeners();
+    setupTextControlListeners();
+    setupLayerControlListeners();
+    hideTextControls();
+    hideLayerControls();
+    window.addEventListener('resize', resizeCanvas);
+}
+
+function addCanvasEventListeners() {
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
     
@@ -57,21 +72,15 @@ function setupEventListeners() {
         canvas.addEventListener('mouseup', handleMouseUp);
         canvas.addEventListener('wheel', handleWheel);
     }
-    
-    window.addEventListener('resize', resizeCanvas);
+}
 
+function addButtonEventListeners() {
     document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
     document.getElementById('addTextBtn').addEventListener('click', addText);
     document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageInput').addEventListener('change', handleImageUpload);
     document.getElementById('cameraBtn').addEventListener('click', startCamera);
     document.getElementById('cameraInput').addEventListener('change', handleCameraCapture);
-
-    setupTextControlListeners();
-    setupLayerControlListeners();
-
-    hideTextControls();
-    hideLayerControls();
 }
 
 function setupTextControlListeners() {
@@ -545,43 +554,8 @@ function createImageElement(src, fileType) {
         const img = new Image();
         img.crossOrigin = "anonymous";  // Enable cross-origin image loading
         img.onload = function() {
-            console.log("Image loaded successfully:", src);
-            let croppedImage;
-            try {
-                croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
-                console.log("Image cropped successfully");
-            } catch (error) {
-                console.error("Error cropping image:", error);
-                croppedImage = img;  // Use the original image if cropping fails
-            }
-            
-            // Ensure minimum dimensions while maintaining aspect ratio
-            const minDimension = 100; // Minimum width or height in pixels
-            let width = croppedImage.width || minDimension;
-            let height = croppedImage.height || minDimension;
-            if (isNaN(width) || isNaN(height) || width < minDimension || height < minDimension) {
-                const aspectRatio = (croppedImage.width && croppedImage.height) ? croppedImage.width / croppedImage.height : 1;
-                if (width < height) {
-                    width = minDimension;
-                    height = Math.round(width / aspectRatio);
-                } else {
-                    height = minDimension;
-                    width = Math.round(height * aspectRatio);
-                }
-            }
-            
-            const newImage = {
-                type: 'image',
-                img: croppedImage,
-                width: width,
-                height: height,
-                x: (canvas.width - width) / 2,
-                y: (canvas.height - height) / 2,
-                angle: 0,
-                loaded: true
-            };
-            console.log("New image element created:", newImage);
-            resolve(newImage);
+            let processedImage = processLoadedImage(img, fileType);
+            resolve(processedImage);
         };
         img.onerror = function(error) {
             console.error("Error loading image from URL:", src);
@@ -591,6 +565,42 @@ function createImageElement(src, fileType) {
         };
         img.src = src;
     });
+}
+
+function processLoadedImage(img, fileType) {
+    console.log("Image loaded successfully");
+    let croppedImage = (fileType === 'image/png') ? cropTransparentEdges(img) : img;
+    
+    let { width, height } = ensureMinimumDimensions(croppedImage.width, croppedImage.height);
+    
+    return {
+        type: 'image',
+        img: croppedImage,
+        width: width,
+        height: height,
+        x: (canvas.width - width) / 2,
+        y: (canvas.height - height) / 2,
+        angle: 0,
+        loaded: true
+    };
+}
+
+function ensureMinimumDimensions(width, height) {
+    width = width || MIN_DIMENSION;
+    height = height || MIN_DIMENSION;
+    
+    if (isNaN(width) || isNaN(height) || width < MIN_DIMENSION || height < MIN_DIMENSION) {
+        const aspectRatio = (width && height) ? width / height : 1;
+        if (width < height) {
+            width = MIN_DIMENSION;
+            height = Math.round(width / aspectRatio);
+        } else {
+            height = MIN_DIMENSION;
+            width = Math.round(height * aspectRatio);
+        }
+    }
+    
+    return { width, height };
 }
 
 function cropTransparentEdges(img) {
