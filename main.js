@@ -288,10 +288,10 @@ function showTextControls(text) {
 }
 
 function updateTextControlsPosition() {
-    if (selectedText) {
+    if (selectedElement && selectedElement.type === 'text') {
         const textControls = document.getElementById('textControls');
-        textControls.style.left = `${selectedText.x}px`;
-        textControls.style.top = `${selectedText.y - selectedText.size - textControls.offsetHeight}px`;
+        textControls.style.left = `${selectedElement.x}px`;
+        textControls.style.top = `${selectedElement.y - selectedElement.size - textControls.offsetHeight}px`;
     }
 }
 
@@ -310,10 +310,9 @@ function hideLayerControls() {
 }
 
 function updateLayerControlsPosition() {
-    if (selectedImage || selectedText) {
+    if (selectedElement) {
         const layerControls = document.getElementById('layerControls');
-        const object = selectedImage || selectedText;
-        const bounds = object.img ? object : getTextBounds(object);
+        const bounds = selectedElement.type === 'image' ? selectedElement : getTextBounds(selectedElement);
         layerControls.style.left = `${bounds.x}px`;
         layerControls.style.top = `${bounds.y + bounds.height + 10}px`;
     }
@@ -340,44 +339,40 @@ function moveLayerDown() {
 }
 
 function handleMouseMove(e) {
-    if (!selectedImage && !selectedText) return;
+    if (!selectedElement) return;
 
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
     if (isDragging) {
-        if (selectedImage) {
-            selectedImage.x += dx;
-            selectedImage.y += dy;
-        } else if (selectedText) {
-            selectedText.x += dx;
-            selectedText.y += dy;
+        selectedElement.x += dx;
+        selectedElement.y += dy;
+        if (selectedElement.type === 'text') {
             updateTextControlsPosition();
         }
         updateLayerControlsPosition();
     } else if (isResizing) {
-        if (selectedImage) {
-            selectedImage.width += dx;
-            selectedImage.height += dy;
-        } else if (selectedText) {
-            selectedText.size += dy / 2;
-            if (selectedText.size < 1) selectedText.size = 1;
+        if (selectedElement.type === 'image') {
+            selectedElement.width += dx;
+            selectedElement.height += dy;
+        } else if (selectedElement.type === 'text') {
+            selectedElement.size += dy / 2;
+            if (selectedElement.size < 1) selectedElement.size = 1;
         }
     } else if (isRotating) {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         let centerX, centerY;
-        if (selectedImage) {
-            centerX = selectedImage.x + selectedImage.width / 2;
-            centerY = selectedImage.y + selectedImage.height / 2;
-            selectedImage.angle = Math.atan2(y - centerY, x - centerX);
-        } else if (selectedText) {
-            const bounds = getTextBounds(selectedText);
+        if (selectedElement.type === 'image') {
+            centerX = selectedElement.x + selectedElement.width / 2;
+            centerY = selectedElement.y + selectedElement.height / 2;
+        } else if (selectedElement.type === 'text') {
+            const bounds = getTextBounds(selectedElement);
             centerX = bounds.x + bounds.width / 2;
             centerY = bounds.y + bounds.height / 2;
-            selectedText.angle = Math.atan2(y - centerY, x - centerX);
         }
+        selectedElement.angle = Math.atan2(y - centerY, x - centerX);
     }
 
     startX = e.clientX;
@@ -410,10 +405,10 @@ function handleMouseUp() {
 
 function handleWheel(e) {
     e.preventDefault();
-    if (selectedImage) {
+    if (selectedElement && selectedElement.type === 'image') {
         const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        selectedImage.width *= scaleFactor;
-        selectedImage.height *= scaleFactor;
+        selectedElement.width *= scaleFactor;
+        selectedElement.height *= scaleFactor;
         drawAll();
     }
 }
@@ -448,31 +443,28 @@ function downloadCanvas() {
     tempCanvas.height = canvas.height;
     const tempCtx = tempCanvas.getContext('2d');
 
-    // Draw images without handles
-    images.forEach(img => {
+    // Draw elements without handles
+    elements.forEach(element => {
         tempCtx.save();
-        tempCtx.translate(img.x + img.width / 2, img.y + img.height / 2);
-        tempCtx.rotate(img.angle);
-        tempCtx.drawImage(img.img, -img.width / 2, -img.height / 2, img.width, img.height);
-        tempCtx.restore();
-    });
+        tempCtx.translate(element.x + (element.width ? element.width / 2 : 0), element.y + (element.height ? element.height / 2 : 0));
+        tempCtx.rotate(element.angle);
 
-    // Draw texts without handles
-    texts.forEach(text => {
-        tempCtx.save();
-        tempCtx.translate(text.x, text.y);
-        tempCtx.rotate(text.angle);
-        tempCtx.font = `${text.size}px ${text.font}`;
-        tempCtx.fillStyle = text.color;
-        tempCtx.strokeStyle = text.outlineColor;
-        tempCtx.lineWidth = text.outlineThickness;
-        tempCtx.shadowBlur = text.shadowBlur;
-        tempCtx.shadowColor = text.shadowColor;
-        
-        if (text.outlineThickness > 0) {
-            tempCtx.strokeText(text.content, 0, 0);
+        if (element.type === 'image') {
+            tempCtx.drawImage(element.img, -element.width / 2, -element.height / 2, element.width, element.height);
+        } else if (element.type === 'text') {
+            tempCtx.font = `${element.size}px ${element.font}`;
+            tempCtx.fillStyle = element.color;
+            tempCtx.strokeStyle = element.outlineColor;
+            tempCtx.lineWidth = element.outlineThickness;
+            tempCtx.shadowBlur = element.shadowBlur;
+            tempCtx.shadowColor = element.shadowColor;
+            
+            if (element.outlineThickness > 0) {
+                tempCtx.strokeText(element.content, 0, 0);
+            }
+            tempCtx.fillText(element.content, 0, 0);
         }
-        tempCtx.fillText(text.content, 0, 0);
+
         tempCtx.restore();
     });
 
