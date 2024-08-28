@@ -661,12 +661,14 @@ function handleDrop(e) {
                     processed = true;
                     break;
                 }
-            } else if (e.dataTransfer.items[i].kind === 'string' && e.dataTransfer.items[i].type === 'text/uri-list') {
-                e.dataTransfer.items[i].getAsString((url) => {
-                    console.log('URL detected:', url);
-                    if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-                        console.log('Creating image element from URL');
-                        createImageElement(url, 'image/' + url.split('.').pop());
+            } else if (e.dataTransfer.items[i].kind === 'string') {
+                e.dataTransfer.items[i].getAsString((text) => {
+                    console.log('String detected:', text);
+                    const urlMatch = text.match(/https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp)/i);
+                    if (urlMatch) {
+                        const imageUrl = urlMatch[0];
+                        console.log('Image URL detected:', imageUrl);
+                        createImageElement(imageUrl, 'image/' + imageUrl.split('.').pop().toLowerCase());
                         processed = true;
                     } else {
                         hideLoadingIndicator();
