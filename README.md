@@ -5,7 +5,7 @@
 
 A powerful web-based image editing tool that allows users to manipulate images and add text overlays directly in the browser. Create stunning compositions with ease!
 
-![Image Editor Screenshot](screenshot.png)
+![Image Editor Screenshot](./screenshot.png)
 
 ## 🚀 Features
 
@@ -27,7 +27,7 @@ A powerful web-based image editing tool that allows users to manipulate images a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/image-editor.git
+   git clone https://github.com/oakmgt/image-editor.git
    ```
 
 2. Navigate to the project directory:
@@ -76,7 +76,8 @@ This project is licensed under the AGPL v3 License. See the [LICENSE](LICENSE) f
 **Koen van Eijk**
 
 - GitHub: [@koenvaneijk](https://github.com/koenvaneijk)
-- Website: [koenvaneijk.nl](https://koenvaneijk.nl)
+- Website: [koenvaneijk.com](https://koenvaneijk.com)
+- X: [koenvaneijk](https://x.com/koenvaneijk)
 
 ## 🙏 Acknowledgments
 
@@ -87,6 +88,3 @@ This project is licensed under the AGPL v3 License. See the [LICENSE](LICENSE) f
 
 This project is actively maintained. If you encounter any issues or have suggestions for improvements, please open an issue on GitHub.
 
----
-
-Made with ❤️ by Koen van Eijk
