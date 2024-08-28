@@ -665,7 +665,12 @@ function handleDrop(e) {
             } else if (e.dataTransfer.items[i].kind === 'string') {
                 e.dataTransfer.items[i].getAsString((text) => {
                     console.log('String data:', text);
-                    if (text.startsWith('data:image')) {
+                    const imageUrl = extractImageUrlFromHtml(text);
+                    if (imageUrl) {
+                        console.log('Image URL detected:', imageUrl);
+                        createImageElement(imageUrl, 'image/jpeg');
+                        processed = true;
+                    } else if (text.startsWith('data:image')) {
                         console.log('Image data URL detected');
                         createImageElement(text, text.split(';')[0].split(':')[1]);
                         processed = true;
@@ -692,6 +697,13 @@ function handleDrop(e) {
         console.log('URL:', e.dataTransfer.getData('text/uri-list'));
         console.log('Plain text:', e.dataTransfer.getData('text/plain'));
     }
+}
+
+function extractImageUrlFromHtml(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const imgElement = doc.querySelector('img');
+    return imgElement ? imgElement.src : null;
 }
 
 function showLoadingIndicator() {
