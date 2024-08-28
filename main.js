@@ -95,9 +95,9 @@ function drawText(text) {
     const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     
     if (text.outlineThickness > 0) {
-        ctx.strokeText(text.content, -metrics.width / 2, textHeight / 2);
+        ctx.strokeText(text.content, 0, 0);
     }
-    ctx.fillText(text.content, -metrics.width / 2, textHeight / 2);
+    ctx.fillText(text.content, 0, 0);
     ctx.restore();
 }
 
@@ -375,11 +375,13 @@ function isOverText(x, y, text) {
 function getTextBounds(text) {
     ctx.font = `${text.size}px ${text.font}`;
     const metrics = ctx.measureText(text.content);
+    const width = metrics.width;
+    const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     return {
-        x: text.x,
-        y: text.y - text.size,
-        width: metrics.width,
-        height: text.size
+        x: text.x - width / 2,
+        y: text.y - height / 2,
+        width: width,
+        height: height
     };
 }
 
