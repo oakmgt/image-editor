@@ -549,16 +549,16 @@ function createImageElement(src, fileType) {
             
             // Ensure minimum dimensions while maintaining aspect ratio
             const minDimension = 100; // Minimum width or height in pixels
-            let width = croppedImage.width;
-            let height = croppedImage.height;
-            if (width < minDimension || height < minDimension) {
-                const aspectRatio = width / height;
+            let width = croppedImage.width || minDimension;
+            let height = croppedImage.height || minDimension;
+            if (isNaN(width) || isNaN(height) || width < minDimension || height < minDimension) {
+                const aspectRatio = (croppedImage.width && croppedImage.height) ? croppedImage.width / croppedImage.height : 1;
                 if (width < height) {
                     width = minDimension;
-                    height = width / aspectRatio;
+                    height = Math.round(width / aspectRatio);
                 } else {
                     height = minDimension;
-                    width = height * aspectRatio;
+                    width = Math.round(height * aspectRatio);
                 }
             }
             
