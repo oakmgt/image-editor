@@ -154,6 +154,12 @@ function startCamera() {
     const video = document.getElementById('cameraPreview');
     const captureCanvas = document.getElementById('captureCanvas');
 
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('getUserMedia is not supported in this browser');
+        alert('Camera access is not supported in this browser. Please try using a different browser or updating your current one.');
+        return;
+    }
+
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
@@ -168,7 +174,13 @@ function startCamera() {
         })
         .catch(error => {
             console.error('Error accessing camera:', error);
-            alert('Unable to access the camera. Please make sure you have granted the necessary permissions.');
+            if (error.name === 'NotAllowedError') {
+                alert('Camera access was denied. Please grant permission to use your camera and try again.');
+            } else if (error.name === 'NotFoundError') {
+                alert('No camera was found on your device. Please make sure you have a working camera and try again.');
+            } else {
+                alert('An error occurred while trying to access the camera. Please check your camera settings and try again.');
+            }
         });
 }
 
