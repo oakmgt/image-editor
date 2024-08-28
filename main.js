@@ -143,11 +143,11 @@ function drawTextHandles(text) {
     const width = metrics.width;
     const height = text.size;
     
+    drawHandle(text.x, text.y - height);
+    drawHandle(text.x + width, text.y - height);
     drawHandle(text.x, text.y);
     drawHandle(text.x + width, text.y);
-    drawHandle(text.x, text.y + height);
-    drawHandle(text.x + width, text.y + height);
-    drawRotationHandle({x: text.x, y: text.y, width: width, height: height});
+    drawRotationHandle({x: text.x, y: text.y - height, width: width, height: height});
 }
 
 function drawHandles(img) {
