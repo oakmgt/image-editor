@@ -183,26 +183,38 @@ function handleMouseDown(e) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    selectedImage = images.find(img => isOverImage(x, y, img));
-    selectedText = texts.find(text => isOverText(x, y, text));
+    let clickedOnHandle = false;
 
     if (selectedImage) {
         if (isOverRotationHandle(x, y, selectedImage)) {
             isRotating = true;
+            clickedOnHandle = true;
         } else if (isOverResizeHandle(x, y, selectedImage)) {
             isResizing = true;
-        } else {
-            isDragging = true;
+            clickedOnHandle = true;
         }
-        hideTextControls();
     } else if (selectedText) {
         if (isOverRotationHandle(x, y, getTextBounds(selectedText))) {
             isRotating = true;
+            clickedOnHandle = true;
         } else if (isOverResizeHandle(x, y, getTextBounds(selectedText))) {
             isResizing = true;
-        } else {
+            clickedOnHandle = true;
+        }
+    }
+
+    if (!clickedOnHandle) {
+        selectedImage = images.find(img => isOverImage(x, y, img));
+        selectedText = texts.find(text => isOverText(x, y, text));
+
+        if (selectedImage || selectedText) {
             isDragging = true;
         }
+    }
+
+    if (selectedImage) {
+        hideTextControls();
+    } else if (selectedText) {
         showTextControls(selectedText);
     } else {
         hideTextControls();
