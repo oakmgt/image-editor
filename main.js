@@ -263,6 +263,56 @@ function applyEffectToImageData(effect, originalImageData, effectImageData) {
                     effectData[i + 1] = g / count;
                     effectData[i + 2] = b / count;
                     break;
+                case 'neon':
+                    const neonIntensity = 50;
+                    effectData[i] = Math.min(255, data[i] + neonIntensity);
+                    effectData[i + 1] = Math.min(255, data[i + 1] + neonIntensity);
+                    effectData[i + 2] = Math.min(255, data[i + 2] + neonIntensity);
+                    break;
+                case 'emboss':
+                    if (x > 0 && y > 0) {
+                        const prevIndex = ((y - 1) * width + (x - 1)) * 4;
+                        for (let j = 0; j < 3; j++) {
+                            effectData[i + j] = 128 + (data[i + j] - data[prevIndex + j]);
+                        }
+                    } else {
+                        effectData[i] = effectData[i + 1] = effectData[i + 2] = 128;
+                    }
+                    break;
+                case 'cartoon':
+                    const edgeThreshold = 80;
+                    const levels = 5;
+                    if (x > 0 && y > 0) {
+                        const leftIndex = (y * width + (x - 1)) * 4;
+                        const topIndex = ((y - 1) * width + x) * 4;
+                        const edge = Math.abs(data[i] - data[leftIndex]) + Math.abs(data[i] - data[topIndex]);
+                        if (edge > edgeThreshold) {
+                            effectData[i] = effectData[i + 1] = effectData[i + 2] = 0;
+                        } else {
+                            for (let j = 0; j < 3; j++) {
+                                effectData[i + j] = Math.floor(data[i + j] / (255 / levels)) * (255 / (levels - 1));
+                            }
+                        }
+                    } else {
+                        for (let j = 0; j < 3; j++) {
+                            effectData[i + j] = Math.floor(data[i + j] / (255 / levels)) * (255 / (levels - 1));
+                        }
+                    }
+                    break;
+                case 'vintage':
+                    effectData[i] = Math.min(255, (data[i] * 0.9) + (data[i + 1] * 0.5) + (data[i + 2] * 0.3));
+                    effectData[i + 1] = Math.min(255, (data[i] * 0.3) + (data[i + 1] * 0.8) + (data[i + 2] * 0.2));
+                    effectData[i + 2] = Math.min(255, (data[i] * 0.2) + (data[i + 1] * 0.3) + (data[i + 2] * 0.7));
+                    break;
+                case 'duotone':
+                    const color1 = [255, 87, 34]; // Orange
+                    const color2 = [33, 150, 243]; // Blue
+                    const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    const t = gray / 255;
+                    for (let j = 0; j < 3; j++) {
+                        effectData[i + j] = Math.round(color1[j] * (1 - t) + color2[j] * t);
+                    }
+                    break;
             }
             effectData[i + 3] = data[i + 3]; // Keep original alpha
         }
