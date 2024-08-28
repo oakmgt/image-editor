@@ -89,8 +89,78 @@ function setupLayerControlListeners() {
             moveLayerDown();
         } else if (event.target.id === 'deleteBtn' || event.target.closest('#deleteBtn')) {
             deleteSelectedElement();
+        } else if (event.target.id === 'effectsBtn' || event.target.closest('#effectsBtn')) {
+            toggleEffectsDropdown();
+        } else if (event.target.closest('#effectsDropdown')) {
+            applyEffect(event.target.dataset.effect);
         }
     });
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('#effectsBtn') && !event.target.closest('#effectsDropdown')) {
+            document.getElementById('effectsDropdown').classList.add('hidden');
+        }
+    });
+}
+
+function toggleEffectsDropdown() {
+    const dropdown = document.getElementById('effectsDropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+function applyEffect(effect) {
+    if (selectedElement && selectedElement.type === 'image') {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = selectedElement.width;
+        tempCanvas.height = selectedElement.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(selectedElement.img, 0, 0, selectedElement.width, selectedElement.height);
+
+        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const data = imageData.data;
+
+        switch (effect) {
+            case 'blackAndWhite':
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    data[i] = data[i + 1] = data[i + 2] = avg;
+                }
+                break;
+            case 'deepFry':
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, data[i] * 1.5);
+                    data[i + 1] = Math.min(255, data[i + 1] * 1.3);
+                    data[i + 2] = Math.min(255, data[i + 2] * 1.1);
+                }
+                break;
+            case 'invert':
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = 255 - data[i];
+                    data[i + 1] = 255 - data[i + 1];
+                    data[i + 2] = 255 - data[i + 2];
+                }
+                break;
+            case 'sepia':
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                }
+                break;
+        }
+
+        tempCtx.putImageData(imageData, 0, 0);
+
+        const newImage = new Image();
+        newImage.onload = function() {
+            selectedElement.img = newImage;
+            drawAll();
+        };
+        newImage.src = tempCanvas.toDataURL();
+    }
 }
 
 function deleteSelectedElement() {
