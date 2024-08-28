@@ -636,6 +636,7 @@ function handleDragOver(e) {
 function handleDrop(e) {
     e.preventDefault();
     console.log('Drop event triggered');
+    console.log('DataTransfer types:', e.dataTransfer.types);
     
     showLoadingIndicator();
     
@@ -663,37 +664,16 @@ function handleDrop(e) {
                 }
             } else if (e.dataTransfer.items[i].kind === 'string') {
                 e.dataTransfer.items[i].getAsString((text) => {
-                    console.log('String detected:', text);
-                    const urlMatch = text.match(/https?:\/\/[^\s]+/);
-                    if (urlMatch) {
-                        const url = urlMatch[0];
-                        console.log('URL detected:', url);
-                        fetch(url)
-                            .then(response => response.text())
-                            .then(html => {
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(html, 'text/html');
-                                const ogImage = doc.querySelector('meta[property="og:image"]');
-                                if (ogImage) {
-                                    const imageUrl = ogImage.getAttribute('content');
-                                    console.log('Image URL detected:', imageUrl);
-                                    createImageElement(imageUrl, 'image/' + imageUrl.split('.').pop().toLowerCase());
-                                    processed = true;
-                                } else {
-                                    console.log('No og:image found in the URL');
-                                    hideLoadingIndicator();
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error fetching URL:', error);
-                                hideLoadingIndicator();
-                            });
+                    console.log('String data:', text);
+                    if (text.startsWith('data:image')) {
+                        console.log('Image data URL detected');
+                        createImageElement(text, text.split(';')[0].split(':')[1]);
+                        processed = true;
                     } else {
-                        console.log('No URL detected in the dropped content');
+                        console.log('No image data detected in the string');
                         hideLoadingIndicator();
                     }
                 });
-                break;
             }
         }
         if (!processed) {
@@ -702,6 +682,15 @@ function handleDrop(e) {
     } else {
         console.log('No recognized data in the drop event');
         hideLoadingIndicator();
+    }
+
+    // Log all available data for debugging
+    console.log('Full drop event:', e);
+    console.log('DataTransfer object:', e.dataTransfer);
+    if (e.dataTransfer.getData) {
+        console.log('HTML:', e.dataTransfer.getData('text/html'));
+        console.log('URL:', e.dataTransfer.getData('text/uri-list'));
+        console.log('Plain text:', e.dataTransfer.getData('text/plain'));
     }
 }
 
