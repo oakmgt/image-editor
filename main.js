@@ -179,9 +179,25 @@ function isOverRotationHandle(x, y, img) {
 }
 
 function downloadCanvas() {
+    // Create a temporary canvas
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Draw images without handles
+    images.forEach(img => {
+        tempCtx.save();
+        tempCtx.translate(img.x + img.width / 2, img.y + img.height / 2);
+        tempCtx.rotate(img.angle);
+        tempCtx.drawImage(img.img, -img.width / 2, -img.height / 2, img.width, img.height);
+        tempCtx.restore();
+    });
+
+    // Create download link
     const link = document.createElement('a');
     link.download = 'canvas_image.png';
-    link.href = canvas.toDataURL();
+    link.href = tempCanvas.toDataURL();
     link.click();
 }
 
