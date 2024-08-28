@@ -49,6 +49,21 @@ function setupTextControlListeners() {
 function setupLayerControlListeners() {
     document.getElementById('moveUpBtn').addEventListener('click', moveLayerUp);
     document.getElementById('moveDownBtn').addEventListener('click', moveLayerDown);
+    document.getElementById('deleteBtn').addEventListener('click', deleteSelectedElement);
+}
+
+function deleteSelectedElement() {
+    if (selectedElement) {
+        if (confirm('Are you sure you want to delete this element?')) {
+            const index = elements.indexOf(selectedElement);
+            if (index > -1) {
+                elements.splice(index, 1);
+            }
+            selectedElement = null;
+            updateControlsVisibility();
+            drawAll();
+        }
+    }
 }
 
 // Canvas operations
