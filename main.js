@@ -529,12 +529,13 @@ function downloadCanvas() {
 
     elements.forEach(element => {
         tempCtx.save();
-        tempCtx.translate(element.x, element.y);
-        tempCtx.rotate(element.angle);
-
         if (element.type === 'image') {
+            tempCtx.translate(element.x + element.width / 2, element.y + element.height / 2);
+            tempCtx.rotate(element.angle);
             tempCtx.drawImage(element.img, -element.width / 2, -element.height / 2, element.width, element.height);
         } else if (element.type === 'text') {
+            tempCtx.translate(element.x, element.y);
+            tempCtx.rotate(element.angle);
             tempCtx.font = `${element.size}px ${element.font}`;
             tempCtx.fillStyle = element.color;
             tempCtx.strokeStyle = element.outlineColor;
@@ -549,7 +550,6 @@ function downloadCanvas() {
             }
             tempCtx.fillText(element.content, 0, 0);
         }
-
         tempCtx.restore();
     });
 
