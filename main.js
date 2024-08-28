@@ -505,29 +505,37 @@ function processUploadedFile(file) {
 
 function createImageElement(src, fileType) {
     const img = new Image();
+    img.crossOrigin = "anonymous";  // Enable cross-origin image loading
     img.onload = function() {
-        let croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
-        croppedImage.onload = function() {
-            const newImage = {
-                type: 'image',
-                img: croppedImage,
-                width: croppedImage.width,
-                height: croppedImage.height,
-                x: (canvas.width - croppedImage.width) / 2,
-                y: (canvas.height - croppedImage.height) / 2,
-                angle: 0
-            };
-            elements.push(newImage);
-            selectedElement = newImage;
-            drawAll();
-        };
-        if (croppedImage !== img) {
-            croppedImage.src = croppedImage.toDataURL();
-        } else {
-            croppedImage.onload();
+        let croppedImage;
+        try {
+            croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
+        } catch (error) {
+            console.error("Error cropping image:", error);
+            croppedImage = img;  // Use the original image if cropping fails
         }
+        
+        const newImage = {
+            type: 'image',
+            img: croppedImage,
+            width: croppedImage.width,
+            height: croppedImage.height,
+            x: (canvas.width - croppedImage.width) / 2,
+            y: (canvas.height - croppedImage.height) / 2,
+            angle: 0
+        };
+        elements.push(newImage);
+        selectedElement = newImage;
+        drawAll();
+    };
+    img.onerror = function() {
+        console.error("Error loading image from URL:", src);
+        alert("Failed to load image. The image might be protected or the server doesn't allow cross-origin requests.");
     };
     img.src = src;
+    if (img.complete || img.width) {
+        img.onload();
+    }
 }
 
 function cropTransparentEdges(img) {
