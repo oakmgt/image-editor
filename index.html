@@ -23,12 +23,16 @@
 </head>
 <body class="bg-gray-100">
     <canvas id="canvas"></canvas>
-    <button id="downloadBtn" class="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" title="Download PNG">
+    <button id="downloadBtn" class="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" title="Download PNG">
         <i class="bi bi-download"></i>
     </button>
-    <button id="addTextBtn" class="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded" title="Add Text">
+    <button id="addTextBtn" class="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mr-2" title="Add Text">
         <i class="bi bi-type"></i>
     </button>
+    <button id="addImageBtn" class="absolute top-4 right-20 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded" title="Add Image">
+        <i class="bi bi-image"></i>
+    </button>
+    <input type="file" id="imageInput" accept="image/*" class="hidden" />
     <div id="textControls" class="hidden absolute bg-white p-4 border border-gray-300 rounded-lg shadow-lg">
         <label for="textInput" class="block mb-2">Text:</label>
         <input type="text" id="textInput" value="Sample Text" class="w-full p-2 mb-2 border rounded" />

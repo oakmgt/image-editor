@@ -20,6 +20,8 @@ function init() {
         window.addEventListener('resize', resizeCanvas);
         document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
         document.getElementById('addTextBtn').addEventListener('click', addText);
+        document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
+        document.getElementById('imageInput').addEventListener('change', handleImageUpload);
 
         // Text control event listeners
         document.getElementById('textInput').addEventListener('input', updateSelectedText);
@@ -39,6 +41,31 @@ function init() {
         hideTextControls();
         hideLayerControls();
     });
+}
+
+function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const newImage = {
+                    img: img,
+                    width: img.width,
+                    height: img.height,
+                    x: (canvas.width - img.width) / 2,
+                    y: (canvas.height - img.height) / 2,
+                    angle: 0
+                };
+                images.push(newImage);
+                selectedImage = newImage;
+                drawAll();
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 function addText() {
