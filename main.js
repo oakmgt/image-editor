@@ -116,68 +116,91 @@ function applyEffect(effect) {
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.drawImage(selectedElement.img, 0, 0, selectedElement.width, selectedElement.height);
 
-        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const data = imageData.data;
+        const originalImageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const effectImageData = tempCtx.createImageData(tempCanvas.width, tempCanvas.height);
 
+        // Apply the effect to effectImageData
+        applyEffectToImageData(effect, originalImageData, effectImageData);
+
+        // Animate the transition
+        const startTime = performance.now();
+        const duration = 500; // 500ms for half a second
+
+        function animate(currentTime) {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+
+            const currentImageData = tempCtx.createImageData(tempCanvas.width, tempCanvas.height);
+            for (let i = 0; i < currentImageData.data.length; i += 4) {
+                for (let j = 0; j < 4; j++) {
+                    currentImageData.data[i + j] = originalImageData.data[i + j] * (1 - progress) + effectImageData.data[i + j] * progress;
+                }
+            }
+
+            tempCtx.putImageData(currentImageData, 0, 0);
+
+            const newImage = new Image();
+            newImage.onload = function() {
+                selectedElement.img = newImage;
+                drawAll();
+            };
+            newImage.src = tempCanvas.toDataURL();
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+}
+
+function applyEffectToImageData(effect, originalImageData, effectImageData) {
+    const data = originalImageData.data;
+    const effectData = effectImageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
         switch (effect) {
             case 'blackAndWhite':
-                for (let i = 0; i < data.length; i += 4) {
-                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    data[i] = data[i + 1] = data[i + 2] = avg > 128 ? 255 : 0;
-                }
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                effectData[i] = effectData[i + 1] = effectData[i + 2] = avg > 128 ? 255 : 0;
                 break;
             case 'grayscale':
-                for (let i = 0; i < data.length; i += 4) {
-                    const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                    data[i] = data[i + 1] = data[i + 2] = avg;
-                }
+                const grayAvg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                effectData[i] = effectData[i + 1] = effectData[i + 2] = grayAvg;
                 break;
             case 'deepFry':
-                for (let i = 0; i < data.length; i += 4) {
-                    // Increase contrast
-                    data[i] = Math.min(255, Math.max(0, (data[i] - 128) * 2 + 128));
-                    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 2 + 128));
-                    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 2 + 128));
+                // Increase contrast
+                effectData[i] = Math.min(255, Math.max(0, (data[i] - 128) * 2 + 128));
+                effectData[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 2 + 128));
+                effectData[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 2 + 128));
 
-                    // Increase saturation
-                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    data[i] = Math.min(255, avg + (data[i] - avg) * 2);
-                    data[i + 1] = Math.min(255, avg + (data[i + 1] - avg) * 2);
-                    data[i + 2] = Math.min(255, avg + (data[i + 2] - avg) * 2);
+                // Increase saturation
+                const deepFryAvg = (effectData[i] + effectData[i + 1] + effectData[i + 2]) / 3;
+                effectData[i] = Math.min(255, deepFryAvg + (effectData[i] - deepFryAvg) * 2);
+                effectData[i + 1] = Math.min(255, deepFryAvg + (effectData[i + 1] - deepFryAvg) * 2);
+                effectData[i + 2] = Math.min(255, deepFryAvg + (effectData[i + 2] - deepFryAvg) * 2);
 
-                    // Add noise
-                    if (Math.random() < 0.05) {
-                        data[i] = data[i + 1] = data[i + 2] = 255;
-                    }
+                // Add noise
+                if (Math.random() < 0.05) {
+                    effectData[i] = effectData[i + 1] = effectData[i + 2] = 255;
                 }
                 break;
             case 'invert':
-                for (let i = 0; i < data.length; i += 4) {
-                    data[i] = 255 - data[i];
-                    data[i + 1] = 255 - data[i + 1];
-                    data[i + 2] = 255 - data[i + 2];
-                }
+                effectData[i] = 255 - data[i];
+                effectData[i + 1] = 255 - data[i + 1];
+                effectData[i + 2] = 255 - data[i + 2];
                 break;
             case 'sepia':
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-                    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-                    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-                }
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                effectData[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                effectData[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                effectData[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
                 break;
         }
-
-        tempCtx.putImageData(imageData, 0, 0);
-
-        const newImage = new Image();
-        newImage.onload = function() {
-            selectedElement.img = newImage;
-            drawAll();
-        };
-        newImage.src = tempCanvas.toDataURL();
+        effectData[i + 3] = data[i + 3]; // Keep original alpha
     }
 }
 
