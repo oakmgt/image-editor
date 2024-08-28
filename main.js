@@ -233,7 +233,7 @@ function handleMouseDown(e) {
 
 function showTextControls(text) {
     const textControls = document.getElementById('textControls');
-    textControls.style.display = 'block';
+    textControls.classList.remove('hidden');
     updateTextControlsPosition();
     
     document.getElementById('textInput').value = text.content;
@@ -255,17 +255,17 @@ function updateTextControlsPosition() {
 }
 
 function hideTextControls() {
-    document.getElementById('textControls').style.display = 'none';
+    document.getElementById('textControls').classList.add('hidden');
 }
 
 function showLayerControls() {
     const layerControls = document.getElementById('layerControls');
-    layerControls.style.display = 'block';
+    layerControls.classList.remove('hidden');
     updateLayerControlsPosition();
 }
 
 function hideLayerControls() {
-    document.getElementById('layerControls').style.display = 'none';
+    document.getElementById('layerControls').classList.add('hidden');
 }
 
 function updateLayerControlsPosition() {
