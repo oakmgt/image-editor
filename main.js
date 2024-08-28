@@ -503,8 +503,16 @@ function processUploadedFile(file) {
                 .then(newImage => {
                     elements.push(newImage);
                     selectedElement = newImage;
-                    drawAll();
-                    hideLoadingIndicator();
+                    // Ensure the image is fully loaded before drawing
+                    if (newImage.img.complete) {
+                        drawAll();
+                        hideLoadingIndicator();
+                    } else {
+                        newImage.img.onload = () => {
+                            drawAll();
+                            hideLoadingIndicator();
+                        };
+                    }
                 })
                 .catch(error => {
                     console.error("Failed to create image element:", error);
@@ -527,9 +535,11 @@ function createImageElement(src, fileType) {
         const img = new Image();
         img.crossOrigin = "anonymous";  // Enable cross-origin image loading
         img.onload = function() {
+            console.log("Image loaded successfully:", src);
             let croppedImage;
             try {
                 croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
+                console.log("Image cropped successfully");
             } catch (error) {
                 console.error("Error cropping image:", error);
                 croppedImage = img;  // Use the original image if cropping fails
