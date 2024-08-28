@@ -253,9 +253,7 @@ function createTextElement() {
 }
 
 function updateSelectedText() {
-    if (selecte
-
-dElement && selectedElement.type === 'text') {
+    if (selectedElement && selectedElement.type === 'text') {
         const textControls = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
         textControls.forEach(control => {
             const element = document.getElementById(control);
