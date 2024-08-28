@@ -217,30 +217,45 @@ function handleMouseDown(e) {
 
     let clickedOnHandle = false;
 
-    if (selectedImage) {
-        if (isOverRotationHandle(x, y, selectedImage)) {
-            isRotating = true;
-            clickedOnHandle = true;
-        } else if (isOverResizeHandle(x, y, selectedImage)) {
-            isResizing = true;
-            clickedOnHandle = true;
-        }
+    // Check if clicked on a handle of the currently selected item
+    if (selectedImage && (isOverRotationHandle(x, y, selectedImage) || isOverResizeHandle(x, y, selectedImage))) {
+        isRotating = isOverRotationHandle(x, y, selectedImage);
+        isResizing = isOverResizeHandle(x, y, selectedImage);
+        clickedOnHandle = true;
     } else if (selectedText) {
-        if (isOverRotationHandle(x, y, getTextBounds(selectedText))) {
-            isRotating = true;
-            clickedOnHandle = true;
-        } else if (isOverResizeHandle(x, y, getTextBounds(selectedText))) {
-            isResizing = true;
+        const textBounds = getTextBounds(selectedText);
+        if (isOverRotationHandle(x, y, textBounds) || isOverResizeHandle(x, y, textBounds)) {
+            isRotating = isOverRotationHandle(x, y, textBounds);
+            isResizing = isOverResizeHandle(x, y, textBounds);
             clickedOnHandle = true;
         }
     }
 
     if (!clickedOnHandle) {
-        selectedImage = images.find(img => isOverImage(x, y, img));
-        selectedText = texts.find(text => isOverText(x, y, text));
+        // Find all items under the click
+        const clickedTexts = texts.filter(text => isOverText(x, y, text));
+        const clickedImages = images.filter(img => isOverImage(x, y, img));
 
-        if (selectedImage || selectedText) {
+        // Combine and sort all clicked items by their index (higher index means higher z-order)
+        const allClickedItems = [
+            ...clickedImages.map(img => ({ type: 'image', item: img, index: images.indexOf(img) })),
+            ...clickedTexts.map(text => ({ type: 'text', item: text, index: texts.indexOf(text) }))
+        ].sort((a, b) => b.index - a.index);
+
+        // Select the topmost item
+        if (allClickedItems.length > 0) {
+            const topItem = allClickedItems[0];
+            if (topItem.type === 'image') {
+                selectedImage = topItem.item;
+                selectedText = null;
+            } else {
+                selectedText = topItem.item;
+                selectedImage = null;
+            }
             isDragging = true;
+        } else {
+            selectedImage = null;
+            selectedText = null;
         }
     }
 
