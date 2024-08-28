@@ -56,6 +56,27 @@ function setupEventListeners() {
     hideTextControls();
     hideLayerControls();
     window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('paste', handlePaste);
+}
+
+function handlePaste(e) {
+    e.preventDefault();
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+            const blob = item.getAsFile();
+            processUploadedFile(blob);
+        } else if (item.type === 'text/plain') {
+            item.getAsString(text => {
+                const newText = createTextElement();
+                newText.content = text;
+                elements.push(newText);
+                selectedElement = newText;
+                drawAll();
+                updateControlsVisibility();
+            });
+        }
+    }
 }
 
 function addCanvasEventListeners() {
