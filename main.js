@@ -29,7 +29,7 @@ function setupEventListeners() {
     document.getElementById('addTextBtn').addEventListener('click', addText);
     document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageInput').addEventListener('change', handleImageUpload);
-    document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('cameraInput').click());
+    document.getElementById('cameraBtn').addEventListener('click', startCamera);
     document.getElementById('cameraInput').addEventListener('change', handleCameraCapture);
 
     setupTextControlListeners();
@@ -148,6 +148,45 @@ function handleImageUpload(e) {
     const files = e.target.files;
     Array.from(files).forEach(processUploadedFile);
     e.target.value = ''; // Clear the file input
+}
+
+function startCamera() {
+    const video = document.getElementById('cameraPreview');
+    const captureCanvas = document.getElementById('captureCanvas');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+            video.classList.remove('hidden');
+            
+            // Add capture button
+            const captureBtn = document.createElement('button');
+            captureBtn.textContent = 'Capture';
+            captureBtn.className = 'absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded';
+            captureBtn.addEventListener('click', () => capturePhoto(video, captureCanvas, stream));
+            document.body.appendChild(captureBtn);
+        })
+        .catch(error => {
+            console.error('Error accessing camera:', error);
+            alert('Unable to access the camera. Please make sure you have granted the necessary permissions.');
+        });
+}
+
+function capturePhoto(video, captureCanvas, stream) {
+    captureCanvas.width = video.videoWidth;
+    captureCanvas.height = video.videoHeight;
+    captureCanvas.getContext('2d').drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+    
+    const imageDataUrl = captureCanvas.toDataURL('image/png');
+    createImageElement(imageDataUrl, 'image/png');
+
+    // Stop the camera stream and hide the video element
+    stream.getTracks().forEach(track => track.stop());
+    video.classList.add('hidden');
+    
+    // Remove the capture button
+    const captureBtn = document.querySelector('button:not([id])');
+    if (captureBtn) captureBtn.remove();
 }
 
 function handleCameraCapture(e) {
