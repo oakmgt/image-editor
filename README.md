@@ -5,7 +5,7 @@
 
 A powerful web-based image editing tool that allows users to manipulate images and add text overlays directly in the browser. Create stunning compositions with ease!
 
-![Image Editor Screenshot](./screenshot.png)
+![Image Editor Screenshot](./demo.gif)
 
 ## 🚀 Features
 
