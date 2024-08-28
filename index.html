@@ -33,13 +33,13 @@
         <i class="bi bi-image"></i>
     </button>
     <input type="file" id="imageInput" accept="image/*" multiple class="hidden" />
-    <div id="textControls" class="hidden absolute bg-white p-2 border border-gray-300 rounded-lg shadow-lg flex flex-wrap items-center space-x-2">
-        <div class="flex items-center">
-            <label for="textInput" class="text-xs mr-1">Text:</label>
+    <div id="textControls" class="hidden absolute bg-white p-2 border border-gray-300 rounded-lg shadow-lg flex flex-wrap items-start space-x-2">
+        <div class="flex flex-col items-center">
+            <label for="textInput" class="text-[10px] mb-1">Text</label>
             <input type="text" id="textInput" value="Sample Text" class="w-24 p-1 text-sm border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="fontSelect" class="text-xs mr-1">Font:</label>
+        <div class="flex flex-col items-center">
+            <label for="fontSelect" class="text-[10px] mb-1">Font</label>
             <select id="fontSelect" class="w-24 p-1 text-sm border rounded">
                 <option value="Arial">Arial</option>
                 <option value="Roboto">Roboto</option>
@@ -48,28 +48,28 @@
                 <option value="Montserrat">Montserrat</option>
             </select>
         </div>
-        <div class="flex items-center">
-            <label for="fontSize" class="text-xs mr-1">Size:</label>
+        <div class="flex flex-col items-center">
+            <label for="fontSize" class="text-[10px] mb-1">Size</label>
             <input type="number" id="fontSize" value="24" min="1" max="100" class="w-12 p-1 text-sm border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="fontColor" class="text-xs mr-1">Color:</label>
+        <div class="flex flex-col items-center">
+            <label for="fontColor" class="text-[10px] mb-1">Color</label>
             <input type="color" id="fontColor" value="#000000" class="w-6 h-6 p-0 border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="outlineColor" class="text-xs mr-1">Outline:</label>
+        <div class="flex flex-col items-center">
+            <label for="outlineColor" class="text-[10px] mb-1">Outline</label>
             <input type="color" id="outlineColor" value="#ffffff" class="w-6 h-6 p-0 border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="outlineThickness" class="text-xs mr-1">Thickness:</label>
+        <div class="flex flex-col items-center">
+            <label for="outlineThickness" class="text-[10px] mb-1">Thickness</label>
             <input type="number" id="outlineThickness" value="0" min="0" max="10" class="w-12 p-1 text-sm border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="shadowBlur" class="text-xs mr-1">Shadow:</label>
+        <div class="flex flex-col items-center">
+            <label for="shadowBlur" class="text-[10px] mb-1">Shadow</label>
             <input type="number" id="shadowBlur" value="0" min="0" max="20" class="w-12 p-1 text-sm border rounded" />
         </div>
-        <div class="flex items-center">
-            <label for="shadowColor" class="text-xs mr-1">Shadow Color:</label>
+        <div class="flex flex-col items-center">
+            <label for="shadowColor" class="text-[10px] mb-1">Shadow Color</label>
             <input type="color" id="shadowColor" value="#000000" class="w-6 h-6 p-0 border rounded" />
         </div>
     </div>

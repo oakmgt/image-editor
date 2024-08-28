@@ -91,10 +91,13 @@ function drawText(text) {
     ctx.shadowBlur = text.shadowBlur;
     ctx.shadowColor = text.shadowColor;
     
+    const metrics = ctx.measureText(text.content);
+    const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    
     if (text.outlineThickness > 0) {
-        ctx.strokeText(text.content, 0, 0);
+        ctx.strokeText(text.content, -metrics.width / 2, textHeight / 2);
     }
-    ctx.fillText(text.content, 0, 0);
+    ctx.fillText(text.content, -metrics.width / 2, textHeight / 2);
     ctx.restore();
 }
 
@@ -254,11 +257,14 @@ function createTextElement() {
 
 function updateSelectedText() {
     if (selectedElement && selectedElement.type === 'text') {
-        const textControls = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
-        textControls.forEach(control => {
-            const element = document.getElementById(control);
-            selectedElement[control.replace('font', '').toLowerCase()] = element.type === 'number' ? parseInt(element.value) : element.value;
-        });
+        selectedElement.content = document.getElementById('textInput').value;
+        selectedElement.font = document.getElementById('fontSelect').value;
+        selectedElement.size = parseInt(document.getElementById('fontSize').value);
+        selectedElement.color = document.getElementById('fontColor').value;
+        selectedElement.outlineColor = document.getElementById('outlineColor').value;
+        selectedElement.outlineThickness = parseInt(document.getElementById('outlineThickness').value);
+        selectedElement.shadowBlur = parseInt(document.getElementById('shadowBlur').value);
+        selectedElement.shadowColor = document.getElementById('shadowColor').value;
         drawAll();
     }
 }
@@ -446,10 +452,14 @@ function showTextControls(text) {
     textControls.classList.remove('hidden');
     updateTextControlsPosition();
     
-    const textControlInputs = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
-    textControlInputs.forEach(control => {
-        document.getElementById(control).value = text[control.replace('font', '').toLowerCase()];
-    });
+    document.getElementById('textInput').value = text.content;
+    document.getElementById('fontSelect').value = text.font;
+    document.getElementById('fontSize').value = text.size;
+    document.getElementById('fontColor').value = text.color;
+    document.getElementById('outlineColor').value = text.outlineColor;
+    document.getElementById('outlineThickness').value = text.outlineThickness;
+    document.getElementById('shadowBlur').value = text.shadowBlur;
+    document.getElementById('shadowColor').value = text.shadowColor;
 }
 
 function updateTextControlsPosition() {
