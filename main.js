@@ -517,13 +517,28 @@ function createImageElement(src, fileType) {
             croppedImage = img;  // Use the original image if cropping fails
         }
         
+        // Ensure minimum dimensions while maintaining aspect ratio
+        const minDimension = 100; // Minimum width or height in pixels
+        let width = croppedImage.width;
+        let height = croppedImage.height;
+        if (width < minDimension || height < minDimension) {
+            const aspectRatio = width / height;
+            if (width < height) {
+                width = minDimension;
+                height = width / aspectRatio;
+            } else {
+                height = minDimension;
+                width = height * aspectRatio;
+            }
+        }
+        
         const newImage = {
             type: 'image',
             img: croppedImage,
-            width: croppedImage.width,
-            height: croppedImage.height,
-            x: (canvas.width - croppedImage.width) / 2,
-            y: (canvas.height - croppedImage.height) / 2,
+            width: width,
+            height: height,
+            x: (canvas.width - width) / 2,
+            y: (canvas.height - height) / 2,
             angle: 0
         };
         elements.push(newImage);
