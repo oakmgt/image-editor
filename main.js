@@ -562,18 +562,14 @@ function createImageElement(src, fileType) {
             resolve(newImage);
         };
         img.onerror = function(error) {
-            console.error("Error loading image:", error);
+            console.error("Error loading image from URL:", src);
+            alert("Failed to load image. The image might be protected or the server doesn't allow cross-origin requests.");
+            hideLoadingIndicator();
             reject(error);
         };
         img.src = src;
     });
 }
-    img.onerror = function() {
-        console.error("Error loading image from URL:", src);
-        alert("Failed to load image. The image might be protected or the server doesn't allow cross-origin requests.");
-        hideLoadingIndicator();
-    };
-    img.src = src;
 
 function cropTransparentEdges(img) {
     const tempCanvas = document.createElement('canvas');
