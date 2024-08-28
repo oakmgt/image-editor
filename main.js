@@ -66,7 +66,7 @@ function updateSelectedText() {
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    drawImage();
+    drawAll();
 }
 
 function handleDragOver(e) {
@@ -91,7 +91,7 @@ function handleDrop(e) {
                 };
                 images.push(newImage);
                 selectedImage = newImage;
-                drawImages();
+                drawAll();
             };
             img.src = event.target.result;
         };
@@ -274,7 +274,7 @@ function handleWheel(e) {
         const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
         selectedImage.width *= scaleFactor;
         selectedImage.height *= scaleFactor;
-        drawImages();
+        drawAll();
     }
 }
 
@@ -345,8 +345,3 @@ function downloadCanvas() {
 
 window.onload = init;
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    drawImages();
-}
