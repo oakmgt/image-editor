@@ -28,6 +28,9 @@ function init() {
     document.getElementById('outlineThickness').addEventListener('input', updateSelectedText);
     document.getElementById('shadowBlur').addEventListener('input', updateSelectedText);
     document.getElementById('shadowColor').addEventListener('input', updateSelectedText);
+
+    // Hide text controls initially
+    hideTextControls();
 }
 
 function addText() {
@@ -188,6 +191,7 @@ function handleMouseDown(e) {
         } else {
             isDragging = true;
         }
+        hideTextControls();
     } else if (selectedText) {
         if (isOverRotationHandle(x, y, getTextBounds(selectedText))) {
             isRotating = true;
@@ -196,9 +200,32 @@ function handleMouseDown(e) {
         } else {
             isDragging = true;
         }
+        showTextControls(selectedText);
+    } else {
+        hideTextControls();
     }
 
     drawAll();
+}
+
+function showTextControls(text) {
+    const textControls = document.getElementById('textControls');
+    textControls.style.display = 'block';
+    textControls.style.left = `${text.x}px`;
+    textControls.style.top = `${text.y - text.size - textControls.offsetHeight}px`;
+    
+    document.getElementById('textInput').value = text.content;
+    document.getElementById('fontSelect').value = text.font;
+    document.getElementById('fontSize').value = text.size;
+    document.getElementById('fontColor').value = text.color;
+    document.getElementById('outlineColor').value = text.outlineColor;
+    document.getElementById('outlineThickness').value = text.outlineThickness;
+    document.getElementById('shadowBlur').value = text.shadowBlur;
+    document.getElementById('shadowColor').value = text.shadowColor;
+}
+
+function hideTextControls() {
+    document.getElementById('textControls').style.display = 'none';
 }
 
 function handleMouseMove(e) {
