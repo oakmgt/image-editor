@@ -323,6 +323,7 @@ function handleMouseMove(e) {
             selectedText.y += dy;
             updateTextControlsPosition();
         }
+        updateLayerControlsPosition();
     } else if (isResizing) {
         if (selectedImage) {
             selectedImage.width += dx;
