@@ -455,8 +455,9 @@ function showTextControls(text) {
 function updateTextControlsPosition() {
     if (selectedElement && selectedElement.type === 'text') {
         const textControls = document.getElementById('textControls');
-        textControls.style.left = `${selectedElement.x}px`;
-        textControls.style.top = `${selectedElement.y - selectedElement.size - textControls.offsetHeight}px`;
+        const bounds = getTextBounds(selectedElement);
+        textControls.style.left = `${bounds.x}px`;
+        textControls.style.top = `${bounds.y - textControls.offsetHeight - 10}px`;
     }
 }
 

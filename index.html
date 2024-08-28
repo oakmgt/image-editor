@@ -33,29 +33,45 @@
         <i class="bi bi-image"></i>
     </button>
     <input type="file" id="imageInput" accept="image/*" multiple class="hidden" />
-    <div id="textControls" class="hidden absolute bg-white p-4 border border-gray-300 rounded-lg shadow-lg">
-        <label for="textInput" class="block mb-2">Text:</label>
-        <input type="text" id="textInput" value="Sample Text" class="w-full p-2 mb-2 border rounded" />
-        <label for="fontSelect" class="block mb-2">Font:</label>
-        <select id="fontSelect" class="w-full p-2 mb-2 border rounded">
-            <option value="Arial">Arial</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Open Sans">Open Sans</option>
-            <option value="Lato">Lato</option>
-            <option value="Montserrat">Montserrat</option>
-        </select>
-        <label for="fontSize" class="block mb-2">Size:</label>
-        <input type="number" id="fontSize" value="24" min="1" max="100" class="w-full p-2 mb-2 border rounded" />
-        <label for="fontColor" class="block mb-2">Color:</label>
-        <input type="color" id="fontColor" value="#000000" class="w-full p-2 mb-2 border rounded" />
-        <label for="outlineColor" class="block mb-2">Outline:</label>
-        <input type="color" id="outlineColor" value="#ffffff" class="w-full p-2 mb-2 border rounded" />
-        <label for="outlineThickness" class="block mb-2">Thickness:</label>
-        <input type="number" id="outlineThickness" value="0" min="0" max="10" class="w-full p-2 mb-2 border rounded" />
-        <label for="shadowBlur" class="block mb-2">Shadow Blur:</label>
-        <input type="number" id="shadowBlur" value="0" min="0" max="20" class="w-full p-2 mb-2 border rounded" />
-        <label for="shadowColor" class="block mb-2">Shadow Color:</label>
-        <input type="color" id="shadowColor" value="#000000" class="w-full p-2 mb-2 border rounded" />
+    <div id="textControls" class="hidden absolute bg-white p-2 border border-gray-300 rounded-lg shadow-lg flex flex-wrap items-center space-x-2">
+        <div class="flex items-center">
+            <label for="textInput" class="text-xs mr-1">Text:</label>
+            <input type="text" id="textInput" value="Sample Text" class="w-24 p-1 text-sm border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="fontSelect" class="text-xs mr-1">Font:</label>
+            <select id="fontSelect" class="w-24 p-1 text-sm border rounded">
+                <option value="Arial">Arial</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Lato">Lato</option>
+                <option value="Montserrat">Montserrat</option>
+            </select>
+        </div>
+        <div class="flex items-center">
+            <label for="fontSize" class="text-xs mr-1">Size:</label>
+            <input type="number" id="fontSize" value="24" min="1" max="100" class="w-12 p-1 text-sm border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="fontColor" class="text-xs mr-1">Color:</label>
+            <input type="color" id="fontColor" value="#000000" class="w-6 h-6 p-0 border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="outlineColor" class="text-xs mr-1">Outline:</label>
+            <input type="color" id="outlineColor" value="#ffffff" class="w-6 h-6 p-0 border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="outlineThickness" class="text-xs mr-1">Thickness:</label>
+            <input type="number" id="outlineThickness" value="0" min="0" max="10" class="w-12 p-1 text-sm border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="shadowBlur" class="text-xs mr-1">Shadow:</label>
+            <input type="number" id="shadowBlur" value="0" min="0" max="20" class="w-12 p-1 text-sm border rounded" />
+        </div>
+        <div class="flex items-center">
+            <label for="shadowColor" class="text-xs mr-1">Shadow Color:</label>
+            <input type="color" id="shadowColor" value="#000000" class="w-6 h-6 p-0 border rounded" />
+        </div>
     </div>
     <div id="layerControls" class="hidden absolute bg-white p-2 border border-gray-300 rounded-lg shadow-lg">
         <button id="moveUpBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded mr-2" title="Move Up">
