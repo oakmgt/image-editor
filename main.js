@@ -1,6 +1,5 @@
 let canvas, ctx, isDragging = false, isResizing = false, isRotating = false;
-let images = [], selectedImage = null;
-let texts = [], selectedText = null;
+let elements = [], selectedElement = null;
 let startX, startY, lastX, lastY;
 const handleSize = 10;
 
@@ -51,6 +50,7 @@ function handleImageUpload(e) {
             const img = new Image();
             img.onload = function() {
                 const newImage = {
+                    type: 'image',
                     img: img,
                     width: img.width,
                     height: img.height,
@@ -58,8 +58,8 @@ function handleImageUpload(e) {
                     y: (canvas.height - img.height) / 2,
                     angle: 0
                 };
-                images.push(newImage);
-                selectedImage = newImage;
+                elements.push(newImage);
+                selectedElement = newImage;
                 drawAll();
             };
             img.src = event.target.result;
@@ -70,6 +70,7 @@ function handleImageUpload(e) {
 
 function addText() {
     const text = {
+        type: 'text',
         content: document.getElementById('textInput').value,
         font: document.getElementById('fontSelect').value,
         size: parseInt(document.getElementById('fontSize').value),
@@ -82,8 +83,8 @@ function addText() {
         y: canvas.height / 2,
         angle: 0
     };
-    texts.push(text);
-    selectedText = text;
+    elements.push(text);
+    selectedElement = text;
     drawAll();
 }
 
@@ -139,14 +140,20 @@ function handleDrop(e) {
 
 function drawAll() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    images.forEach(drawImage);
-    texts.forEach(drawText);
+    elements.forEach(element => {
+        if (element.type === 'image') {
+            drawImage(element);
+        } else if (element.type === 'text') {
+            drawText(element);
+        }
+    });
 
-    if (selectedImage) {
-        drawHandles(selectedImage);
-    }
-    if (selectedText) {
-        drawTextHandles(selectedText);
+    if (selectedElement) {
+        if (selectedElement.type === 'image') {
+            drawHandles(selectedElement);
+        } else if (selectedElement.type === 'text') {
+            drawTextHandles(selectedElement);
+        }
     }
 }
 
@@ -218,53 +225,45 @@ function handleMouseDown(e) {
     let clickedOnHandle = false;
 
     // Check if clicked on a handle of the currently selected item
-    if (selectedImage && (isOverRotationHandle(x, y, selectedImage) || isOverResizeHandle(x, y, selectedImage))) {
-        isRotating = isOverRotationHandle(x, y, selectedImage);
-        isResizing = isOverResizeHandle(x, y, selectedImage);
-        clickedOnHandle = true;
-    } else if (selectedText) {
-        const textBounds = getTextBounds(selectedText);
-        if (isOverRotationHandle(x, y, textBounds) || isOverResizeHandle(x, y, textBounds)) {
-            isRotating = isOverRotationHandle(x, y, textBounds);
-            isResizing = isOverResizeHandle(x, y, textBounds);
+    if (selectedElement) {
+        if (selectedElement.type === 'image' && (isOverRotationHandle(x, y, selectedElement) || isOverResizeHandle(x, y, selectedElement))) {
+            isRotating = isOverRotationHandle(x, y, selectedElement);
+            isResizing = isOverResizeHandle(x, y, selectedElement);
             clickedOnHandle = true;
+        } else if (selectedElement.type === 'text') {
+            const textBounds = getTextBounds(selectedElement);
+            if (isOverRotationHandle(x, y, textBounds) || isOverResizeHandle(x, y, textBounds)) {
+                isRotating = isOverRotationHandle(x, y, textBounds);
+                isResizing = isOverResizeHandle(x, y, textBounds);
+                clickedOnHandle = true;
+            }
         }
     }
 
     if (!clickedOnHandle) {
         // Find all items under the click
-        const clickedTexts = texts.filter(text => isOverText(x, y, text));
-        const clickedImages = images.filter(img => isOverImage(x, y, img));
-
-        // Combine and sort all clicked items by their index (higher index means higher z-order)
-        const allClickedItems = [
-            ...clickedImages.map(img => ({ type: 'image', item: img, index: images.indexOf(img) })),
-            ...clickedTexts.map(text => ({ type: 'text', item: text, index: texts.indexOf(text) }))
-        ].sort((a, b) => b.index - a.index);
+        const clickedItems = elements.filter(element => 
+            (element.type === 'image' && isOverImage(x, y, element)) ||
+            (element.type === 'text' && isOverText(x, y, element))
+        );
 
         // Select the topmost item
-        if (allClickedItems.length > 0) {
-            const topItem = allClickedItems[0];
-            if (topItem.type === 'image') {
-                selectedImage = topItem.item;
-                selectedText = null;
-            } else {
-                selectedText = topItem.item;
-                selectedImage = null;
-            }
+        if (clickedItems.length > 0) {
+            selectedElement = clickedItems[clickedItems.length - 1];
             isDragging = true;
         } else {
-            selectedImage = null;
-            selectedText = null;
+            selectedElement = null;
         }
     }
 
-    if (selectedImage) {
-        hideTextControls();
-        showLayerControls();
-    } else if (selectedText) {
-        showTextControls(selectedText);
-        showLayerControls();
+    if (selectedElement) {
+        if (selectedElement.type === 'image') {
+            hideTextControls();
+            showLayerControls();
+        } else if (selectedElement.type === 'text') {
+            showTextControls(selectedElement);
+            showLayerControls();
+        }
     } else {
         hideTextControls();
         hideLayerControls();
@@ -321,30 +320,20 @@ function updateLayerControlsPosition() {
 }
 
 function moveLayerUp() {
-    if (selectedImage) {
-        const index = images.indexOf(selectedImage);
-        if (index < images.length - 1) {
-            [images[index], images[index + 1]] = [images[index + 1], images[index]];
-        }
-    } else if (selectedText) {
-        const index = texts.indexOf(selectedText);
-        if (index < texts.length - 1) {
-            [texts[index], texts[index + 1]] = [texts[index + 1], texts[index]];
+    if (selectedElement) {
+        const index = elements.indexOf(selectedElement);
+        if (index < elements.length - 1) {
+            [elements[index], elements[index + 1]] = [elements[index + 1], elements[index]];
         }
     }
     drawAll();
 }
 
 function moveLayerDown() {
-    if (selectedImage) {
-        const index = images.indexOf(selectedImage);
+    if (selectedElement) {
+        const index = elements.indexOf(selectedElement);
         if (index > 0) {
-            [images[index], images[index - 1]] = [images[index - 1], images[index]];
-        }
-    } else if (selectedText) {
-        const index = texts.indexOf(selectedText);
-        if (index > 0) {
-            [texts[index], texts[index - 1]] = [texts[index - 1], texts[index]];
+            [elements[index], elements[index - 1]] = [elements[index - 1], elements[index]];
         }
     }
     drawAll();
