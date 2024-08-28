@@ -134,9 +134,21 @@ function applyEffect(effect) {
                 break;
             case 'deepFry':
                 for (let i = 0; i < data.length; i += 4) {
-                    data[i] = Math.min(255, data[i] * 1.5);
-                    data[i + 1] = Math.min(255, data[i + 1] * 1.3);
-                    data[i + 2] = Math.min(255, data[i + 2] * 1.1);
+                    // Increase contrast
+                    data[i] = Math.min(255, Math.max(0, (data[i] - 128) * 2 + 128));
+                    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 2 + 128));
+                    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 2 + 128));
+
+                    // Increase saturation
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    data[i] = Math.min(255, avg + (data[i] - avg) * 2);
+                    data[i + 1] = Math.min(255, avg + (data[i + 1] - avg) * 2);
+                    data[i + 2] = Math.min(255, avg + (data[i + 2] - avg) * 2);
+
+                    // Add noise
+                    if (Math.random() < 0.05) {
+                        data[i] = data[i + 1] = data[i + 2] = 255;
+                    }
                 }
                 break;
             case 'invert':
