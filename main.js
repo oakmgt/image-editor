@@ -43,28 +43,31 @@ function init() {
 }
 
 function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const newImage = {
-                    type: 'image',
-                    img: img,
-                    width: img.width,
-                    height: img.height,
-                    x: (canvas.width - img.width) / 2,
-                    y: (canvas.height - img.height) / 2,
-                    angle: 0
+    const files = e.target.files;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const newImage = {
+                        type: 'image',
+                        img: img,
+                        width: img.width,
+                        height: img.height,
+                        x: (canvas.width - img.width) / 2,
+                        y: (canvas.height - img.height) / 2,
+                        angle: 0
+                    };
+                    elements.push(newImage);
+                    selectedElement = newImage;
+                    drawAll();
                 };
-                elements.push(newImage);
-                selectedElement = newImage;
-                drawAll();
+                img.src = event.target.result;
             };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
+        }
     }
 }
 
