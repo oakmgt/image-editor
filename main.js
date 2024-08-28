@@ -183,18 +183,29 @@ function handleDrop(e) {
         reader.onload = function(event) {
             const img = new Image();
             img.onload = function() {
-                const newImage = {
-                    type: 'image',
-                    img: img,
-                    width: img.width,
-                    height: img.height,
-                    x: (canvas.width - img.width) / 2,
-                    y: (canvas.height - img.height) / 2,
-                    angle: 0
+                let croppedImage = img;
+                if (file.type === 'image/png') {
+                    croppedImage = cropTransparentEdges(img);
+                }
+                croppedImage.onload = function() {
+                    const newImage = {
+                        type: 'image',
+                        img: croppedImage,
+                        width: croppedImage.width,
+                        height: croppedImage.height,
+                        x: (canvas.width - croppedImage.width) / 2,
+                        y: (canvas.height - croppedImage.height) / 2,
+                        angle: 0
+                    };
+                    elements.push(newImage);
+                    selectedElement = newImage;
+                    drawAll();
                 };
-                elements.push(newImage);
-                selectedElement = newImage;
-                drawAll();
+                if (croppedImage !== img) {
+                    croppedImage.src = croppedImage.toDataURL();
+                } else {
+                    croppedImage.onload(); // Call immediately if no cropping was done
+                }
             };
             img.src = event.target.result;
         };
