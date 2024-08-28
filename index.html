@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html {
             margin: 0;
@@ -11,51 +14,53 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            font-family: 'Roboto', sans-serif;
         }
         #canvas {
             display: block;
         }
-        #downloadBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-        }
     </style>
 </head>
-<body>
+<body class="bg-gray-100">
     <canvas id="canvas"></canvas>
-    <button id="downloadBtn">Download PNG</button>
-    <button id="addTextBtn" style="position: absolute; top: 10px; right: 10px;">Add Text</button>
-    <div id="textControls" style="display: none; position: absolute; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        <label for="textInput">Text:</label>
-        <input type="text" id="textInput" value="Sample Text" />
-        <label for="fontSelect">Font:</label>
-        <select id="fontSelect">
+    <button id="downloadBtn" class="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+        <i class="bi bi-download mr-2"></i>Download PNG
+    </button>
+    <button id="addTextBtn" class="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+        <i class="bi bi-type mr-2"></i>Add Text
+    </button>
+    <div id="textControls" class="hidden absolute bg-white p-4 border border-gray-300 rounded-lg shadow-lg">
+        <label for="textInput" class="block mb-2">Text:</label>
+        <input type="text" id="textInput" value="Sample Text" class="w-full p-2 mb-2 border rounded" />
+        <label for="fontSelect" class="block mb-2">Font:</label>
+        <select id="fontSelect" class="w-full p-2 mb-2 border rounded">
             <option value="Arial">Arial</option>
             <option value="Roboto">Roboto</option>
             <option value="Open Sans">Open Sans</option>
             <option value="Lato">Lato</option>
             <option value="Montserrat">Montserrat</option>
         </select>
-        <label for="fontSize">Size:</label>
-        <input type="number" id="fontSize" value="24" min="1" max="100" />
-        <label for="fontColor">Color:</label>
-        <input type="color" id="fontColor" value="#000000" />
-        <label for="outlineColor">Outline:</label>
-        <input type="color" id="outlineColor" value="#ffffff" />
-        <label for="outlineThickness">Thickness:</label>
-        <input type="number" id="outlineThickness" value="0" min="0" max="10" />
-        <label for="shadowBlur">Shadow Blur:</label>
-        <input type="number" id="shadowBlur" value="0" min="0" max="20" />
-        <label for="shadowColor">Shadow Color:</label>
-        <input type="color" id="shadowColor" value="#000000" />
+        <label for="fontSize" class="block mb-2">Size:</label>
+        <input type="number" id="fontSize" value="24" min="1" max="100" class="w-full p-2 mb-2 border rounded" />
+        <label for="fontColor" class="block mb-2">Color:</label>
+        <input type="color" id="fontColor" value="#000000" class="w-full p-2 mb-2 border rounded" />
+        <label for="outlineColor" class="block mb-2">Outline:</label>
+        <input type="color" id="outlineColor" value="#ffffff" class="w-full p-2 mb-2 border rounded" />
+        <label for="outlineThickness" class="block mb-2">Thickness:</label>
+        <input type="number" id="outlineThickness" value="0" min="0" max="10" class="w-full p-2 mb-2 border rounded" />
+        <label for="shadowBlur" class="block mb-2">Shadow Blur:</label>
+        <input type="number" id="shadowBlur" value="0" min="0" max="20" class="w-full p-2 mb-2 border rounded" />
+        <label for="shadowColor" class="block mb-2">Shadow Color:</label>
+        <input type="color" id="shadowColor" value="#000000" class="w-full p-2 mb-2 border rounded" />
     </div>
-    <div id="layerControls" style="display: none; position: absolute; background: white; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
-        <button id="moveUpBtn">Move Up</button>
-        <button id="moveDownBtn">Move Down</button>
+    <div id="layerControls" class="hidden absolute bg-white p-2 border border-gray-300 rounded-lg shadow-lg">
+        <button id="moveUpBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded mr-2">
+            <i class="bi bi-arrow-up-short mr-1"></i>Move Up
+        </button>
+        <button id="moveDownBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded">
+            <i class="bi bi-arrow-down-short mr-1"></i>Move Down
+        </button>
     </div>
-    <link href="https://fonts.googleapis.com/css?family=Roboto|Open+Sans|Lato|Montserrat" rel="stylesheet">
     <script src="main.js"></script>
 </body>
 </html>
