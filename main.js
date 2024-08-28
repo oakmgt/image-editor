@@ -1,28 +1,63 @@
 // Constants
-const HANDLE_SIZE = 10;
+const HANDLE_SIZE = 20; // Increased for better touch interaction
 
 // Global variables
 let canvas, ctx;
 let elements = [], selectedElement = null;
 let isDragging = false, isResizing = false, isRotating = false;
 let startX, startY;
+let isMobile = false;
 
 // Initialization
 function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     resizeCanvas();
+    checkMobile();
 
     document.fonts.ready.then(setupEventListeners);
+}
+
+function checkMobile() {
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        adjustUIForMobile();
+    }
+}
+
+function adjustUIForMobile() {
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.style.padding = '10px 20px';
+        button.style.fontSize = '16px';
+    });
+    
+    const textControls = document.getElementById('textControls');
+    textControls.style.maxWidth = '90vw';
+    textControls.style.flexWrap = 'wrap';
+    
+    const inputs = textControls.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.style.fontSize = '16px';
+        input.style.padding = '5px';
+    });
 }
 
 function setupEventListeners() {
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('wheel', handleWheel);
+    
+    if (isMobile) {
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', handleTouchEnd);
+    } else {
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('wheel', handleWheel);
+    }
+    
     window.addEventListener('resize', resizeCanvas);
 
     document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
@@ -370,7 +405,39 @@ function handleDrop(e) {
 }
 
 function handleMouseDown(e) {
-    const { x, y } = getCanvasCoordinates(e);
+    handleStart(e.clientX, e.clientY);
+}
+
+function handleMouseMove(e) {
+    handleMove(e.clientX, e.clientY);
+}
+
+function handleMouseUp() {
+    handleEnd();
+}
+
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        e.preventDefault(); // Prevent scrolling
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY);
+    }
+}
+
+function handleTouchMove(e) {
+    if (e.touches.length === 1) {
+        e.preventDefault(); // Prevent scrolling
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+    }
+}
+
+function handleTouchEnd() {
+    handleEnd();
+}
+
+function handleStart(clientX, clientY) {
+    const { x, y } = getCanvasCoordinates({ clientX, clientY });
     let clickedOnHandle = checkHandleClick(x, y);
 
     if (!clickedOnHandle) {
@@ -380,32 +447,32 @@ function handleMouseDown(e) {
     }
 
     updateControlsVisibility();
-    startX = e.clientX;
-    startY = e.clientY;
+    startX = clientX;
+    startY = clientY;
     drawAll();
 }
 
-function handleMouseMove(e) {
+function handleMove(clientX, clientY) {
     if (!selectedElement) return;
 
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
 
     if (isDragging) {
         moveElement(selectedElement, dx, dy);
     } else if (isResizing) {
         resizeElement(selectedElement, dx, dy);
     } else if (isRotating) {
-        rotateElement(selectedElement, e);
+        rotateElement(selectedElement, { clientX, clientY });
     }
 
-    startX = e.clientX;
-    startY = e.clientY;
+    startX = clientX;
+    startY = clientY;
     updateControlsPosition();
     drawAll();
 }
 
-function handleMouseUp() {
+function handleEnd() {
     isDragging = false;
     isResizing = false;
     isRotating = false;
@@ -427,6 +494,14 @@ function getCanvasCoordinates(e) {
     return {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
+    };
+}
+
+function getTouchCanvasCoordinates(touch) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
     };
 }
 
