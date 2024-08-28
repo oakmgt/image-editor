@@ -626,9 +626,28 @@ function handleDragOver(e) {
 
 function handleDrop(e) {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-        processUploadedFile(file);
+    if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            processUploadedFile(file);
+        }
+    } else if (e.dataTransfer.items) {
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            if (e.dataTransfer.items[i].kind === 'file') {
+                const file = e.dataTransfer.items[i].getAsFile();
+                if (file && file.type.startsWith('image/')) {
+                    processUploadedFile(file);
+                    break;
+                }
+            } else if (e.dataTransfer.items[i].kind === 'string' && e.dataTransfer.items[i].type === 'text/uri-list') {
+                e.dataTransfer.items[i].getAsString((url) => {
+                    if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+                        createImageElement(url, 'image/' + url.split('.').pop());
+                    }
+                });
+                break;
+            }
+        }
     }
 }
 
