@@ -529,7 +529,7 @@ function downloadCanvas() {
 
     elements.forEach(element => {
         tempCtx.save();
-        tempCtx.translate(element.x + (element.width ? element.width / 2 : 0), element.y + (element.height ? element.height / 2 : 0));
+        tempCtx.translate(element.x, element.y);
         tempCtx.rotate(element.angle);
 
         if (element.type === 'image') {
@@ -541,19 +541,52 @@ function downloadCanvas() {
             tempCtx.lineWidth = element.outlineThickness;
             tempCtx.shadowBlur = element.shadowBlur;
             tempCtx.shadowColor = element.shadowColor;
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
             
             if (element.outlineThickness > 0) {
-                tempCtx.strokeText(element.content, -element.width / 2, 0);
+                tempCtx.strokeText(element.content, 0, 0);
             }
-            tempCtx.fillText(element.content, -element.width / 2, 0);
+            tempCtx.fillText(element.content, 0, 0);
         }
 
         tempCtx.restore();
     });
 
+    // Crop transparent edges
+    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const { data, width, height } = imageData;
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const alpha = data[(y * width + x) * 4 + 3];
+            if (alpha !== 0) {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+        }
+    }
+
+    // Add padding
+    const padding = 10;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(width - 1, maxX + padding);
+    maxY = Math.min(height - 1, maxY + padding);
+
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = maxX - minX + 1;
+    croppedCanvas.height = maxY - minY + 1;
+    const croppedCtx = croppedCanvas.getContext('2d');
+
+    croppedCtx.drawImage(tempCanvas, minX, minY, croppedCanvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+
     const link = document.createElement('a');
     link.download = 'canvas_image.png';
-    link.href = tempCanvas.toDataURL();
+    link.href = croppedCanvas.toDataURL();
     link.click();
 }
 
