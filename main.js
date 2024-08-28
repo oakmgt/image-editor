@@ -90,9 +90,8 @@ function drawText(text) {
     ctx.lineWidth = text.outlineThickness;
     ctx.shadowBlur = text.shadowBlur;
     ctx.shadowColor = text.shadowColor;
-    
-    const metrics = ctx.measureText(text.content);
-    const textHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     
     if (text.outlineThickness > 0) {
         ctx.strokeText(text.content, 0, 0);
@@ -376,7 +375,7 @@ function getTextBounds(text) {
     ctx.font = `${text.size}px ${text.font}`;
     const metrics = ctx.measureText(text.content);
     const width = metrics.width;
-    const height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    const height = text.size; // Approximation, as actualBoundingBox might not be supported in all browsers
     return {
         x: text.x - width / 2,
         y: text.y - height / 2,
