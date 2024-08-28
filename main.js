@@ -500,6 +500,8 @@ function processUploadedFile(file) {
         const reader = new FileReader();
         reader.onload = (event) => createImageElement(event.target.result, file.type);
         reader.readAsDataURL(file);
+    } else {
+        hideLoadingIndicator();
     }
 }
 
@@ -527,15 +529,14 @@ function createImageElement(src, fileType) {
         elements.push(newImage);
         selectedElement = newImage;
         drawAll();
+        hideLoadingIndicator();
     };
     img.onerror = function() {
         console.error("Error loading image from URL:", src);
         alert("Failed to load image. The image might be protected or the server doesn't allow cross-origin requests.");
+        hideLoadingIndicator();
     };
     img.src = src;
-    if (img.complete || img.width) {
-        img.onload();
-    }
 }
 
 function cropTransparentEdges(img) {
@@ -636,15 +637,20 @@ function handleDrop(e) {
     e.preventDefault();
     console.log('Drop event triggered');
     
+    showLoadingIndicator();
+    
     if (e.dataTransfer.files.length > 0) {
         console.log('Files detected:', e.dataTransfer.files);
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
             console.log('Processing file:', file.name, 'Type:', file.type);
             processUploadedFile(file);
+        } else {
+            hideLoadingIndicator();
         }
     } else if (e.dataTransfer.items) {
         console.log('DataTransferItemList detected');
+        let processed = false;
         for (let i = 0; i < e.dataTransfer.items.length; i++) {
             console.log('Item:', i, 'Kind:', e.dataTransfer.items[i].kind, 'Type:', e.dataTransfer.items[i].type);
             if (e.dataTransfer.items[i].kind === 'file') {
@@ -652,6 +658,7 @@ function handleDrop(e) {
                 if (file && file.type.startsWith('image/')) {
                     console.log('Processing file from item:', file.name, 'Type:', file.type);
                     processUploadedFile(file);
+                    processed = true;
                     break;
                 }
             } else if (e.dataTransfer.items[i].kind === 'string' && e.dataTransfer.items[i].type === 'text/uri-list') {
@@ -660,13 +667,45 @@ function handleDrop(e) {
                     if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
                         console.log('Creating image element from URL');
                         createImageElement(url, 'image/' + url.split('.').pop());
+                        processed = true;
+                    } else {
+                        hideLoadingIndicator();
                     }
                 });
                 break;
             }
         }
+        if (!processed) {
+            hideLoadingIndicator();
+        }
     } else {
         console.log('No recognized data in the drop event');
+        hideLoadingIndicator();
+    }
+}
+
+function showLoadingIndicator() {
+    // Create and show a loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loadingIndicator';
+    loadingIndicator.textContent = 'Loading...';
+    loadingIndicator.style.position = 'fixed';
+    loadingIndicator.style.top = '50%';
+    loadingIndicator.style.left = '50%';
+    loadingIndicator.style.transform = 'translate(-50%, -50%)';
+    loadingIndicator.style.padding = '10px';
+    loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    loadingIndicator.style.color = 'white';
+    loadingIndicator.style.borderRadius = '5px';
+    loadingIndicator.style.zIndex = '1000';
+    document.body.appendChild(loadingIndicator);
+}
+
+function hideLoadingIndicator() {
+    // Remove the loading indicator
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
     }
 }
 
