@@ -1,5 +1,5 @@
 let canvas, ctx, isDragging = false, isResizing = false, isRotating = false;
-let image, imageX, imageY, imageWidth, imageHeight, imageAngle = 0;
+let images = [], selectedImage = null;
 let startX, startY, lastX, lastY;
 const handleSize = 10;
 
@@ -36,12 +36,17 @@ function handleDrop(e) {
         reader.onload = function(event) {
             const img = new Image();
             img.onload = function() {
-                image = img;
-                imageWidth = img.width;
-                imageHeight = img.height;
-                imageX = (canvas.width - imageWidth) / 2;
-                imageY = (canvas.height - imageHeight) / 2;
-                drawImage();
+                const newImage = {
+                    img: img,
+                    width: img.width,
+                    height: img.height,
+                    x: (canvas.width - img.width) / 2,
+                    y: (canvas.height - img.height) / 2,
+                    angle: 0
+                };
+                images.push(newImage);
+                selectedImage = newImage;
+                drawImages();
             };
             img.src = event.target.result;
         };
@@ -49,22 +54,27 @@ function handleDrop(e) {
     }
 }
 
-function drawImage() {
+function drawImages() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (image) {
+    images.forEach(img => {
         ctx.save();
-        ctx.translate(imageX + imageWidth / 2, imageY + imageHeight / 2);
-        ctx.rotate(imageAngle);
-        ctx.drawImage(image, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
+        ctx.translate(img.x + img.width / 2, img.y + img.height / 2);
+        ctx.rotate(img.angle);
+        ctx.drawImage(img.img, -img.width / 2, -img.height / 2, img.width, img.height);
         ctx.restore();
+    });
 
-        // Draw handles
-        drawHandle(imageX, imageY);
-        drawHandle(imageX + imageWidth, imageY);
-        drawHandle(imageX, imageY + imageHeight);
-        drawHandle(imageX + imageWidth, imageY + imageHeight);
-        drawRotationHandle();
+    if (selectedImage) {
+        drawHandles(selectedImage);
     }
+}
+
+function drawHandles(img) {
+    drawHandle(img.x, img.y);
+    drawHandle(img.x + img.width, img.y);
+    drawHandle(img.x, img.y + img.height);
+    drawHandle(img.x + img.width, img.y + img.height);
+    drawRotationHandle(img);
 }
 
 function drawHandle(x, y) {
@@ -72,10 +82,10 @@ function drawHandle(x, y) {
     ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
 }
 
-function drawRotationHandle() {
+function drawRotationHandle(img) {
     ctx.fillStyle = 'green';
     ctx.beginPath();
-    ctx.arc(imageX + imageWidth / 2, imageY - 30, handleSize / 2, 0, Math.PI * 2);
+    ctx.arc(img.x + img.width / 2, img.y - 30, handleSize / 2, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -86,39 +96,47 @@ function handleMouseDown(e) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    if (isOverRotationHandle(x, y)) {
-        isRotating = true;
-    } else if (isOverResizeHandle(x, y)) {
-        isResizing = true;
-    } else if (isOverImage(x, y)) {
-        isDragging = true;
+    selectedImage = images.find(img => isOverImage(x, y, img));
+
+    if (selectedImage) {
+        if (isOverRotationHandle(x, y, selectedImage)) {
+            isRotating = true;
+        } else if (isOverResizeHandle(x, y, selectedImage)) {
+            isResizing = true;
+        } else {
+            isDragging = true;
+        }
     }
+
+    drawImages();
 }
 
 function handleMouseMove(e) {
+    if (!selectedImage) return;
+
     if (isDragging) {
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        imageX += dx;
-        imageY += dy;
+        selectedImage.x += dx;
+        selectedImage.y += dy;
         startX = e.clientX;
         startY = e.clientY;
     } else if (isResizing) {
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        imageWidth += dx;
-        imageHeight += dy;
+        selectedImage.width += dx;
+        selectedImage.height += dy;
         startX = e.clientX;
         startY = e.clientY;
     } else if (isRotating) {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        const centerX = imageX + imageWidth / 2;
-        const centerY = imageY + imageHeight / 2;
-        imageAngle = Math.atan2(y - centerY, x - centerX);
+        const centerX = selectedImage.x + selectedImage.width / 2;
+        const centerY = selectedImage.y + selectedImage.height / 2;
+        selectedImage.angle = Math.atan2(y - centerY, x - centerX);
     }
-    drawImage();
+    drawImages();
 }
 
 function handleMouseUp() {
@@ -129,22 +147,24 @@ function handleMouseUp() {
 
 function handleWheel(e) {
     e.preventDefault();
-    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    imageWidth *= scaleFactor;
-    imageHeight *= scaleFactor;
-    drawImage();
+    if (selectedImage) {
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        selectedImage.width *= scaleFactor;
+        selectedImage.height *= scaleFactor;
+        drawImages();
+    }
 }
 
-function isOverImage(x, y) {
-    return x >= imageX && x <= imageX + imageWidth && y >= imageY && y <= imageY + imageHeight;
+function isOverImage(x, y, img) {
+    return x >= img.x && x <= img.x + img.width && y >= img.y && y <= img.y + img.height;
 }
 
-function isOverResizeHandle(x, y) {
+function isOverResizeHandle(x, y, img) {
     const handles = [
-        {x: imageX, y: imageY},
-        {x: imageX + imageWidth, y: imageY},
-        {x: imageX, y: imageY + imageHeight},
-        {x: imageX + imageWidth, y: imageY + imageHeight}
+        {x: img.x, y: img.y},
+        {x: img.x + img.width, y: img.y},
+        {x: img.x, y: img.y + img.height},
+        {x: img.x + img.width, y: img.y + img.height}
     ];
     return handles.some(handle => 
         x >= handle.x - handleSize / 2 && x <= handle.x + handleSize / 2 &&
@@ -152,9 +172,9 @@ function isOverResizeHandle(x, y) {
     );
 }
 
-function isOverRotationHandle(x, y) {
-    const centerX = imageX + imageWidth / 2;
-    const centerY = imageY - 30;
+function isOverRotationHandle(x, y, img) {
+    const centerX = img.x + img.width / 2;
+    const centerY = img.y - 30;
     return Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2) <= handleSize / 2;
 }
 
@@ -166,3 +186,9 @@ function downloadCanvas() {
 }
 
 window.onload = init;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    drawImages();
+}
