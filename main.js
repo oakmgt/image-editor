@@ -47,9 +47,15 @@ function setupTextControlListeners() {
 }
 
 function setupLayerControlListeners() {
-    document.getElementById('moveUpBtn').addEventListener('click', moveLayerUp);
-    document.getElementById('moveDownBtn').addEventListener('click', moveLayerDown);
-    document.getElementById('deleteBtn').addEventListener('click', deleteSelectedElement);
+    document.getElementById('layerControls').addEventListener('click', function(event) {
+        if (event.target.id === 'moveUpBtn') {
+            moveLayerUp();
+        } else if (event.target.id === 'moveDownBtn') {
+            moveLayerDown();
+        } else if (event.target.id === 'deleteBtn' || event.target.closest('#deleteBtn')) {
+            deleteSelectedElement();
+        }
+    });
 }
 
 function deleteSelectedElement() {
