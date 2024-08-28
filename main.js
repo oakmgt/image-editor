@@ -52,8 +52,12 @@ function setupLayerControlListeners() {
 // Canvas operations
 function resizeCanvas() {
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight - 20; // Reduce height by 20px to accommodate the OAK MGT info
     drawAll();
+    
+    // Adjust the position of the OAK MGT info
+    const oakMgtInfo = document.getElementById('oakMgtInfo');
+    oakMgtInfo.style.bottom = '2px'; // Ensure it's at the very bottom
 }
 
 function drawAll() {
