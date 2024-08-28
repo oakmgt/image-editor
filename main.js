@@ -1,234 +1,74 @@
-let canvas, ctx, isDragging = false, isResizing = false, isRotating = false;
-let elements = [], selectedElement = null;
-let startX, startY, lastX, lastY;
-const handleSize = 10;
+// Constants
+const HANDLE_SIZE = 10;
 
+// Global variables
+let canvas, ctx;
+let elements = [], selectedElement = null;
+let isDragging = false, isResizing = false, isRotating = false;
+let startX, startY;
+
+// Initialization
 function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     resizeCanvas();
 
-    // Load fonts before initializing the rest of the application
-    document.fonts.ready.then(() => {
-        canvas.addEventListener('dragover', handleDragOver);
-        canvas.addEventListener('drop', handleDrop);
-        canvas.addEventListener('mousedown', handleMouseDown);
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mouseup', handleMouseUp);
-        canvas.addEventListener('wheel', handleWheel);
-        window.addEventListener('resize', resizeCanvas);
-        document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
-        document.getElementById('addTextBtn').addEventListener('click', addText);
-        document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
-        document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+    document.fonts.ready.then(setupEventListeners);
+}
 
-        // Text control event listeners
-        document.getElementById('textInput').addEventListener('input', updateSelectedText);
-        document.getElementById('fontSelect').addEventListener('change', updateSelectedText);
-        document.getElementById('fontSize').addEventListener('input', updateSelectedText);
-        document.getElementById('fontColor').addEventListener('input', updateSelectedText);
-        document.getElementById('outlineColor').addEventListener('input', updateSelectedText);
-        document.getElementById('outlineThickness').addEventListener('input', updateSelectedText);
-        document.getElementById('shadowBlur').addEventListener('input', updateSelectedText);
-        document.getElementById('shadowColor').addEventListener('input', updateSelectedText);
+function setupEventListeners() {
+    canvas.addEventListener('dragover', handleDragOver);
+    canvas.addEventListener('drop', handleDrop);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('wheel', handleWheel);
+    window.addEventListener('resize', resizeCanvas);
 
-        // Layer control event listeners
-        document.getElementById('moveUpBtn').addEventListener('click', moveLayerUp);
-        document.getElementById('moveDownBtn').addEventListener('click', moveLayerDown);
+    document.getElementById('downloadBtn').addEventListener('click', downloadCanvas);
+    document.getElementById('addTextBtn').addEventListener('click', addText);
+    document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
+    document.getElementById('imageInput').addEventListener('change', handleImageUpload);
 
-        // Hide text controls initially
-        hideTextControls();
-        hideLayerControls();
+    setupTextControlListeners();
+    setupLayerControlListeners();
+
+    hideTextControls();
+    hideLayerControls();
+}
+
+function setupTextControlListeners() {
+    const textControls = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
+    textControls.forEach(control => {
+        document.getElementById(control).addEventListener('input', updateSelectedText);
     });
 }
 
-function handleImageUpload(e) {
-    const files = e.target.files;
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    let croppedImage = img;
-                    if (file.type === 'image/png') {
-                        croppedImage = cropTransparentEdges(img);
-                    }
-                    croppedImage.onload = function() {
-                        const newImage = {
-                            type: 'image',
-                            img: croppedImage,
-                            width: croppedImage.width,
-                            height: croppedImage.height,
-                            x: (canvas.width - croppedImage.width) / 2,
-                            y: (canvas.height - croppedImage.height) / 2,
-                            angle: 0
-                        };
-                        elements.push(newImage);
-                        selectedElement = newImage;
-                        drawAll();
-                    };
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-    // Clear the file input
-    e.target.value = '';
+function setupLayerControlListeners() {
+    document.getElementById('moveUpBtn').addEventListener('click', moveLayerUp);
+    document.getElementById('moveDownBtn').addEventListener('click', moveLayerDown);
 }
 
-function cropTransparentEdges(img) {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = img.width;
-    tempCanvas.height = img.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(img, 0, 0);
-
-    const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-    const { data, width, height } = imgData;
-
-    let minX = width, minY = height, maxX = 0, maxY = 0;
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const alpha = data[(y * width + x) * 4 + 3];
-            if (alpha !== 0) {
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, y);
-            }
-        }
-    }
-
-    // Check if the image is fully transparent
-    if (minX > maxX || minY > maxY) {
-        console.log("Image is fully transparent");
-        return img;
-    }
-
-    // Add a small padding
-    const padding = 1;
-    minX = Math.max(0, minX - padding);
-    minY = Math.max(0, minY - padding);
-    maxX = Math.min(width - 1, maxX + padding);
-    maxY = Math.min(height - 1, maxY + padding);
-
-    const croppedWidth = maxX - minX + 1;
-    const croppedHeight = maxY - minY + 1;
-
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = croppedWidth;
-    croppedCanvas.height = croppedHeight;
-    const croppedCtx = croppedCanvas.getContext('2d');
-
-    croppedCtx.drawImage(img, minX, minY, croppedWidth, croppedHeight, 0, 0, croppedWidth, croppedHeight);
-
-    const croppedImage = new Image();
-    croppedImage.src = croppedCanvas.toDataURL();
-    return croppedImage;
-}
-
-function addText() {
-    const text = {
-        type: 'text',
-        content: document.getElementById('textInput').value,
-        font: document.getElementById('fontSelect').value,
-        size: parseInt(document.getElementById('fontSize').value),
-        color: document.getElementById('fontColor').value,
-        outlineColor: document.getElementById('outlineColor').value,
-        outlineThickness: parseInt(document.getElementById('outlineThickness').value),
-        shadowBlur: parseInt(document.getElementById('shadowBlur').value),
-        shadowColor: document.getElementById('shadowColor').value,
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        angle: 0
-    };
-    elements.push(text);
-    selectedElement = text;
-    drawAll();
-}
-
-function updateSelectedText() {
-    if (selectedText) {
-        selectedText.content = document.getElementById('textInput').value;
-        selectedText.font = document.getElementById('fontSelect').value;
-        selectedText.size = parseInt(document.getElementById('fontSize').value);
-        selectedText.color = document.getElementById('fontColor').value;
-        selectedText.outlineColor = document.getElementById('outlineColor').value;
-        selectedText.outlineThickness = parseInt(document.getElementById('outlineThickness').value);
-        selectedText.shadowBlur = parseInt(document.getElementById('shadowBlur').value);
-        selectedText.shadowColor = document.getElementById('shadowColor').value;
-        drawAll();
-    }
-}
-
+// Canvas operations
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     drawAll();
 }
 
-function handleDragOver(e) {
-    e.preventDefault();
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                let croppedImage = img;
-                if (file.type === 'image/png') {
-                    croppedImage = cropTransparentEdges(img);
-                }
-                croppedImage.onload = function() {
-                    const newImage = {
-                        type: 'image',
-                        img: croppedImage,
-                        width: croppedImage.width,
-                        height: croppedImage.height,
-                        x: (canvas.width - croppedImage.width) / 2,
-                        y: (canvas.height - croppedImage.height) / 2,
-                        angle: 0
-                    };
-                    elements.push(newImage);
-                    selectedElement = newImage;
-                    drawAll();
-                };
-                if (croppedImage !== img) {
-                    croppedImage.src = croppedImage.toDataURL();
-                } else {
-                    croppedImage.onload(); // Call immediately if no cropping was done
-                }
-            };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
+function drawAll() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    elements.forEach(drawElement);
+    if (selectedElement) {
+        drawHandles(selectedElement);
     }
 }
 
-function drawAll() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    elements.forEach(element => {
-        if (element.type === 'image') {
-            drawImage(element);
-        } else if (element.type === 'text') {
-            drawText(element);
-        }
-    });
-
-    if (selectedElement) {
-        if (selectedElement.type === 'image') {
-            drawHandles(selectedElement);
-        } else if (selectedElement.type === 'text') {
-            drawTextHandles(selectedElement);
-        }
+function drawElement(element) {
+    if (element.type === 'image') {
+        drawImage(element);
+    } else if (element.type === 'text') {
+        drawText(element);
     }
 }
 
@@ -258,19 +98,15 @@ function drawText(text) {
     ctx.restore();
 }
 
-function drawTextHandles(text) {
-    const metrics = ctx.measureText(text.content);
-    const width = metrics.width;
-    const height = text.size;
-    
-    drawHandle(text.x, text.y - height);
-    drawHandle(text.x + width, text.y - height);
-    drawHandle(text.x, text.y);
-    drawHandle(text.x + width, text.y);
-    drawRotationHandle({x: text.x, y: text.y - height, width: width, height: height});
+function drawHandles(element) {
+    if (element.type === 'image') {
+        drawImageHandles(element);
+    } else if (element.type === 'text') {
+        drawTextHandles(element);
+    }
 }
 
-function drawHandles(img) {
+function drawImageHandles(img) {
     drawHandle(img.x, img.y);
     drawHandle(img.x + img.width, img.y);
     drawHandle(img.x, img.y + img.height);
@@ -278,59 +114,321 @@ function drawHandles(img) {
     drawRotationHandle(img);
 }
 
-function drawHandle(x, y) {
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize);
+function drawTextHandles(text) {
+    const bounds = getTextBounds(text);
+    drawHandle(bounds.x, bounds.y);
+    drawHandle(bounds.x + bounds.width, bounds.y);
+    drawHandle(bounds.x, bounds.y + bounds.height);
+    drawHandle(bounds.x + bounds.width, bounds.y + bounds.height);
+    drawRotationHandle(bounds);
 }
 
-function drawRotationHandle(img) {
+function drawHandle(x, y) {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(x - HANDLE_SIZE / 2, y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+}
+
+function drawRotationHandle(element) {
     ctx.fillStyle = 'green';
     ctx.beginPath();
-    ctx.arc(img.x + img.width / 2, img.y - 30, handleSize / 2, 0, Math.PI * 2);
+    ctx.arc(element.x + element.width / 2, element.y - 30, HANDLE_SIZE / 2, 0, Math.PI * 2);
     ctx.fill();
 }
 
-function handleMouseDown(e) {
-    startX = e.clientX;
-    startY = e.clientY;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+// Image operations
+function handleImageUpload(e) {
+    const files = e.target.files;
+    Array.from(files).forEach(processUploadedFile);
+    e.target.value = ''; // Clear the file input
+}
 
-    let clickedOnHandle = false;
+function processUploadedFile(file) {
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => createImageElement(event.target.result, file.type);
+        reader.readAsDataURL(file);
+    }
+}
 
-    // Check if clicked on a handle of the currently selected item
-    if (selectedElement) {
-        if (selectedElement.type === 'image' && (isOverRotationHandle(x, y, selectedElement) || isOverResizeHandle(x, y, selectedElement))) {
-            isRotating = isOverRotationHandle(x, y, selectedElement);
-            isResizing = isOverResizeHandle(x, y, selectedElement);
-            clickedOnHandle = true;
-        } else if (selectedElement.type === 'text') {
-            const textBounds = getTextBounds(selectedElement);
-            if (isOverRotationHandle(x, y, textBounds) || isOverResizeHandle(x, y, textBounds)) {
-                isRotating = isOverRotationHandle(x, y, textBounds);
-                isResizing = isOverResizeHandle(x, y, textBounds);
-                clickedOnHandle = true;
+function createImageElement(src, fileType) {
+    const img = new Image();
+    img.onload = function() {
+        let croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
+        croppedImage.onload = function() {
+            const newImage = {
+                type: 'image',
+                img: croppedImage,
+                width: croppedImage.width,
+                height: croppedImage.height,
+                x: (canvas.width - croppedImage.width) / 2,
+                y: (canvas.height - croppedImage.height) / 2,
+                angle: 0
+            };
+            elements.push(newImage);
+            selectedElement = newImage;
+            drawAll();
+        };
+        if (croppedImage !== img) {
+            croppedImage.src = croppedImage.toDataURL();
+        } else {
+            croppedImage.onload();
+        }
+    };
+    img.src = src;
+}
+
+function cropTransparentEdges(img) {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(img, 0, 0);
+
+    const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const { data, width, height } = imgData;
+
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const alpha = data[(y * width + x) * 4 + 3];
+            if (alpha !== 0) {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
             }
         }
     }
 
-    if (!clickedOnHandle) {
-        // Find all items under the click
-        const clickedItems = elements.filter(element => 
-            (element.type === 'image' && isOverImage(x, y, element)) ||
-            (element.type === 'text' && isOverText(x, y, element))
-        );
-
-        // Select the topmost item
-        if (clickedItems.length > 0) {
-            selectedElement = clickedItems[clickedItems.length - 1];
-            isDragging = true;
-        } else {
-            selectedElement = null;
-        }
+    if (minX > maxX || minY > maxY) {
+        console.log("Image is fully transparent");
+        return img;
     }
 
+    const padding = 1;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(width - 1, maxX + padding);
+    maxY = Math.min(height - 1, maxY + padding);
+
+    const croppedWidth = maxX - minX + 1;
+    const croppedHeight = maxY - minY + 1;
+
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = croppedWidth;
+    croppedCanvas.height = croppedHeight;
+    const croppedCtx = croppedCanvas.getContext('2d');
+
+    croppedCtx.drawImage(img, minX, minY, croppedWidth, croppedHeight, 0, 0, croppedWidth, croppedHeight);
+
+    const croppedImage = new Image();
+    croppedImage.src = croppedCanvas.toDataURL();
+    return croppedImage;
+}
+
+// Text operations
+function addText() {
+    const text = createTextElement();
+    elements.push(text);
+    selectedElement = text;
+    drawAll();
+}
+
+function createTextElement() {
+    return {
+        type: 'text',
+        content: document.getElementById('textInput').value,
+        font: document.getElementById('fontSelect').value,
+        size: parseInt(document.getElementById('fontSize').value),
+        color: document.getElementById('fontColor').value,
+        outlineColor: document.getElementById('outlineColor').value,
+        outlineThickness: parseInt(document.getElementById('outlineThickness').value),
+        shadowBlur: parseInt(document.getElementById('shadowBlur').value),
+        shadowColor: document.getElementById('shadowColor').value,
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        angle: 0
+    };
+}
+
+function updateSelectedText() {
+    if (selecte
+
+dElement && selectedElement.type === 'text') {
+        const textControls = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
+        textControls.forEach(control => {
+            const element = document.getElementById(control);
+            selectedElement[control.replace('font', '').toLowerCase()] = element.type === 'number' ? parseInt(element.value) : element.value;
+        });
+        drawAll();
+    }
+}
+
+// Event handlers
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        processUploadedFile(file);
+    }
+}
+
+function handleMouseDown(e) {
+    const { x, y } = getCanvasCoordinates(e);
+    let clickedOnHandle = checkHandleClick(x, y);
+
+    if (!clickedOnHandle) {
+        const clickedItems = elements.filter(element => isOverElement(x, y, element));
+        selectedElement = clickedItems.length > 0 ? clickedItems[clickedItems.length - 1] : null;
+        isDragging = selectedElement !== null;
+    }
+
+    updateControlsVisibility();
+    startX = e.clientX;
+    startY = e.clientY;
+    drawAll();
+}
+
+function handleMouseMove(e) {
+    if (!selectedElement) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (isDragging) {
+        moveElement(selectedElement, dx, dy);
+    } else if (isResizing) {
+        resizeElement(selectedElement, dx, dy);
+    } else if (isRotating) {
+        rotateElement(selectedElement, e);
+    }
+
+    startX = e.clientX;
+    startY = e.clientY;
+    updateControlsPosition();
+    drawAll();
+}
+
+function handleMouseUp() {
+    isDragging = false;
+    isResizing = false;
+    isRotating = false;
+}
+
+function handleWheel(e) {
+    e.preventDefault();
+    if (selectedElement && selectedElement.type === 'image') {
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        selectedElement.width *= scaleFactor;
+        selectedElement.height *= scaleFactor;
+        drawAll();
+    }
+}
+
+// Helper functions
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+function checkHandleClick(x, y) {
+    if (!selectedElement) return false;
+
+    const element = selectedElement.type === 'text' ? getTextBounds(selectedElement) : selectedElement;
+    isRotating = isOverRotationHandle(x, y, element);
+    isResizing = isOverResizeHandle(x, y, element);
+
+    return isRotating || isResizing;
+}
+
+function isOverElement(x, y, element) {
+    if (element.type === 'image') {
+        return isOverImage(x, y, element);
+    } else if (element.type === 'text') {
+        return isOverText(x, y, element);
+    }
+    return false;
+}
+
+function isOverImage(x, y, img) {
+    return x >= img.x && x <= img.x + img.width && y >= img.y && y <= img.y + img.height;
+}
+
+function isOverText(x, y, text) {
+    const bounds = getTextBounds(text);
+    return x >= bounds.x && x <= bounds.x + bounds.width &&
+           y >= bounds.y && y <= bounds.y + bounds.height;
+}
+
+function getTextBounds(text) {
+    ctx.font = `${text.size}px ${text.font}`;
+    const metrics = ctx.measureText(text.content);
+    return {
+        x: text.x,
+        y: text.y - text.size,
+        width: metrics.width,
+        height: text.size
+    };
+}
+
+function isOverResizeHandle(x, y, element) {
+    const handles = [
+        {x: element.x, y: element.y},
+        {x: element.x + element.width, y: element.y},
+        {x: element.x, y: element.y + element.height},
+        {x: element.x + element.width, y: element.y + element.height}
+    ];
+    return handles.some(handle => 
+        x >= handle.x - HANDLE_SIZE / 2 && x <= handle.x + HANDLE_SIZE / 2 &&
+        y >= handle.y - HANDLE_SIZE / 2 && y <= handle.y + HANDLE_SIZE / 2
+    );
+}
+
+function isOverRotationHandle(x, y, element) {
+    const centerX = element.x + element.width / 2;
+    const centerY = element.y - 30;
+    return Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2) <= HANDLE_SIZE / 2;
+}
+
+function moveElement(element, dx, dy) {
+    element.x += dx;
+    element.y += dy;
+}
+
+function resizeElement(element, dx, dy) {
+    if (element.type === 'image') {
+        element.width += dx;
+        element.height += dy;
+    } else if (element.type === 'text') {
+        element.size += dy / 2;
+        if (element.size < 1) element.size = 1;
+    }
+}
+
+function rotateElement(element, e) {
+    const { x, y } = getCanvasCoordinates(e);
+    let centerX, centerY;
+    if (element.type === 'image') {
+        centerX = element.x + element.width / 2;
+        centerY = element.y + element.height / 2;
+    } else if (element.type === 'text') {
+        const bounds = getTextBounds(element);
+        centerX = bounds.x + bounds.width / 2;
+        centerY = bounds.y + bounds.height / 2;
+    }
+    element.angle = Math.atan2(y - centerY, x - centerX);
+}
+
+// UI controls
+function updateControlsVisibility() {
     if (selectedElement) {
         if (selectedElement.type === 'image') {
             hideTextControls();
@@ -343,8 +441,6 @@ function handleMouseDown(e) {
         hideTextControls();
         hideLayerControls();
     }
-
-    drawAll();
 }
 
 function showTextControls(text) {
@@ -352,14 +448,10 @@ function showTextControls(text) {
     textControls.classList.remove('hidden');
     updateTextControlsPosition();
     
-    document.getElementById('textInput').value = text.content;
-    document.getElementById('fontSelect').value = text.font;
-    document.getElementById('fontSize').value = text.size;
-    document.getElementById('fontColor').value = text.color;
-    document.getElementById('outlineColor').value = text.outlineColor;
-    document.getElementById('outlineThickness').value = text.outlineThickness;
-    document.getElementById('shadowBlur').value = text.shadowBlur;
-    document.getElementById('shadowColor').value = text.shadowColor;
+    const textControlInputs = ['textInput', 'fontSelect', 'fontSize', 'fontColor', 'outlineColor', 'outlineThickness', 'shadowBlur', 'shadowColor'];
+    textControlInputs.forEach(control => {
+        document.getElementById(control).value = text[control.replace('font', '').toLowerCase()];
+    });
 }
 
 function updateTextControlsPosition() {
@@ -393,6 +485,11 @@ function updateLayerControlsPosition() {
     }
 }
 
+function updateControlsPosition() {
+    updateTextControlsPosition();
+    updateLayerControlsPosition();
+}
+
 function moveLayerUp() {
     if (selectedElement) {
         const index = elements.indexOf(selectedElement);
@@ -413,112 +510,13 @@ function moveLayerDown() {
     drawAll();
 }
 
-function handleMouseMove(e) {
-    if (!selectedElement) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    if (isDragging) {
-        selectedElement.x += dx;
-        selectedElement.y += dy;
-        if (selectedElement.type === 'text') {
-            updateTextControlsPosition();
-        }
-        updateLayerControlsPosition();
-    } else if (isResizing) {
-        if (selectedElement.type === 'image') {
-            selectedElement.width += dx;
-            selectedElement.height += dy;
-        } else if (selectedElement.type === 'text') {
-            selectedElement.size += dy / 2;
-            if (selectedElement.size < 1) selectedElement.size = 1;
-        }
-    } else if (isRotating) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        let centerX, centerY;
-        if (selectedElement.type === 'image') {
-            centerX = selectedElement.x + selectedElement.width / 2;
-            centerY = selectedElement.y + selectedElement.height / 2;
-        } else if (selectedElement.type === 'text') {
-            const bounds = getTextBounds(selectedElement);
-            centerX = bounds.x + bounds.width / 2;
-            centerY = bounds.y + bounds.height / 2;
-        }
-        selectedElement.angle = Math.atan2(y - centerY, x - centerX);
-    }
-
-    startX = e.clientX;
-    startY = e.clientY;
-    drawAll();
-}
-
-function isOverText(x, y, text) {
-    const bounds = getTextBounds(text);
-    return x >= bounds.x && x <= bounds.x + bounds.width &&
-           y >= bounds.y && y <= bounds.y + bounds.height;
-}
-
-function getTextBounds(text) {
-    ctx.font = `${text.size}px ${text.font}`;
-    const metrics = ctx.measureText(text.content);
-    return {
-        x: text.x,
-        y: text.y - text.size,
-        width: metrics.width,
-        height: text.size
-    };
-}
-
-function handleMouseUp() {
-    isDragging = false;
-    isResizing = false;
-    isRotating = false;
-}
-
-function handleWheel(e) {
-    e.preventDefault();
-    if (selectedElement && selectedElement.type === 'image') {
-        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        selectedElement.width *= scaleFactor;
-        selectedElement.height *= scaleFactor;
-        drawAll();
-    }
-}
-
-function isOverImage(x, y, img) {
-    return x >= img.x && x <= img.x + img.width && y >= img.y && y <= img.y + img.height;
-}
-
-function isOverResizeHandle(x, y, img) {
-    const handles = [
-        {x: img.x, y: img.y},
-        {x: img.x + img.width, y: img.y},
-        {x: img.x, y: img.y + img.height},
-        {x: img.x + img.width, y: img.y + img.height}
-    ];
-    return handles.some(handle => 
-        x >= handle.x - handleSize / 2 && x <= handle.x + handleSize / 2 &&
-        y >= handle.y - handleSize / 2 && y <= handle.y + handleSize / 2
-    );
-}
-
-function isOverRotationHandle(x, y, img) {
-    const centerX = img.x + img.width / 2;
-    const centerY = img.y - 30;
-    return Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2) <= handleSize / 2;
-}
-
+// Download functionality
 function downloadCanvas() {
-    // Create a temporary canvas
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     const tempCtx = tempCanvas.getContext('2d');
 
-    // Draw elements without handles
     elements.forEach(element => {
         tempCtx.save();
         tempCtx.translate(element.x + (element.width ? element.width / 2 : 0), element.y + (element.height ? element.height / 2 : 0));
@@ -535,15 +533,14 @@ function downloadCanvas() {
             tempCtx.shadowColor = element.shadowColor;
             
             if (element.outlineThickness > 0) {
-                tempCtx.strokeText(element.content, 0, 0);
+                tempCtx.strokeText(element.content, -element.width / 2, 0);
             }
-            tempCtx.fillText(element.content, 0, 0);
+            tempCtx.fillText(element.content, -element.width / 2, 0);
         }
 
         tempCtx.restore();
     });
 
-    // Create download link
     const link = document.createElement('a');
     link.download = 'canvas_image.png';
     link.href = tempCanvas.toDataURL();
@@ -551,4 +548,3 @@ function downloadCanvas() {
 }
 
 window.onload = init;
-
