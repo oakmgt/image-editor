@@ -121,6 +121,7 @@ function handleDrop(e) {
             const img = new Image();
             img.onload = function() {
                 const newImage = {
+                    type: 'image',
                     img: img,
                     width: img.width,
                     height: img.height,
@@ -128,8 +129,8 @@ function handleDrop(e) {
                     y: (canvas.height - img.height) / 2,
                     angle: 0
                 };
-                images.push(newImage);
-                selectedImage = newImage;
+                elements.push(newImage);
+                selectedElement = newImage;
                 drawAll();
             };
             img.src = event.target.result;
