@@ -211,8 +211,7 @@ function handleMouseDown(e) {
 function showTextControls(text) {
     const textControls = document.getElementById('textControls');
     textControls.style.display = 'block';
-    textControls.style.left = `${text.x}px`;
-    textControls.style.top = `${text.y - text.size - textControls.offsetHeight}px`;
+    updateTextControlsPosition();
     
     document.getElementById('textInput').value = text.content;
     document.getElementById('fontSelect').value = text.font;
@@ -222,6 +221,14 @@ function showTextControls(text) {
     document.getElementById('outlineThickness').value = text.outlineThickness;
     document.getElementById('shadowBlur').value = text.shadowBlur;
     document.getElementById('shadowColor').value = text.shadowColor;
+}
+
+function updateTextControlsPosition() {
+    if (selectedText) {
+        const textControls = document.getElementById('textControls');
+        textControls.style.left = `${selectedText.x}px`;
+        textControls.style.top = `${selectedText.y - selectedText.size - textControls.offsetHeight}px`;
+    }
 }
 
 function hideTextControls() {
@@ -241,6 +248,7 @@ function handleMouseMove(e) {
         } else if (selectedText) {
             selectedText.x += dx;
             selectedText.y += dy;
+            updateTextControlsPosition();
         }
     } else if (isResizing) {
         if (selectedImage) {
