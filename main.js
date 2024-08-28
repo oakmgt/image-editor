@@ -51,13 +51,17 @@ function handleImageUpload(e) {
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
+                    let croppedImage = img;
+                    if (file.type === 'image/png') {
+                        croppedImage = cropTransparentEdges(img);
+                    }
                     const newImage = {
                         type: 'image',
-                        img: img,
-                        width: img.width,
-                        height: img.height,
-                        x: (canvas.width - img.width) / 2,
-                        y: (canvas.height - img.height) / 2,
+                        img: croppedImage,
+                        width: croppedImage.width,
+                        height: croppedImage.height,
+                        x: (canvas.width - croppedImage.width) / 2,
+                        y: (canvas.height - croppedImage.height) / 2,
                         angle: 0
                     };
                     elements.push(newImage);
@@ -71,6 +75,52 @@ function handleImageUpload(e) {
     }
     // Clear the file input
     e.target.value = '';
+}
+
+function cropTransparentEdges(img) {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(img, 0, 0);
+
+    const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const { data, width, height } = imgData;
+
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const alpha = data[(y * width + x) * 4 + 3];
+            if (alpha !== 0) {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+        }
+    }
+
+    // Add a small padding
+    const padding = 1;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(width - 1, maxX + padding);
+    maxY = Math.min(height - 1, maxY + padding);
+
+    const croppedWidth = maxX - minX + 1;
+    const croppedHeight = maxY - minY + 1;
+
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = croppedWidth;
+    croppedCanvas.height = croppedHeight;
+    const croppedCtx = croppedCanvas.getContext('2d');
+
+    croppedCtx.drawImage(img, minX, minY, croppedWidth, croppedHeight, 0, 0, croppedWidth, croppedHeight);
+
+    const croppedImage = new Image();
+    croppedImage.src = croppedCanvas.toDataURL();
+    return croppedImage;
 }
 
 function addText() {
