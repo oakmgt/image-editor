@@ -503,16 +503,15 @@ function processUploadedFile(file) {
                 .then(newImage => {
                     elements.push(newImage);
                     selectedElement = newImage;
-                    // Ensure the image is fully loaded before drawing
-                    if (newImage.img.complete) {
-                        drawAll();
-                        hideLoadingIndicator();
-                    } else {
+                    // Always add the image to the canvas, regardless of its loading state
+                    drawAll();
+                    // Set up an onload handler to redraw once the image is fully loaded
+                    if (!newImage.img.complete) {
                         newImage.img.onload = () => {
                             drawAll();
-                            hideLoadingIndicator();
                         };
                     }
+                    hideLoadingIndicator();
                 })
                 .catch(error => {
                     console.error("Failed to create image element:", error);
@@ -569,6 +568,7 @@ function createImageElement(src, fileType) {
                 y: (canvas.height - height) / 2,
                 angle: 0
             };
+            console.log("New image element created:", newImage);
             resolve(newImage);
         };
         img.onerror = function(error) {
