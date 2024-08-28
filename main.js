@@ -498,54 +498,76 @@ function handleCameraCapture(e) {
 function processUploadedFile(file) {
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (event) => createImageElement(event.target.result, file.type);
+        reader.onload = (event) => {
+            createImageElement(event.target.result, file.type)
+                .then(newImage => {
+                    elements.push(newImage);
+                    selectedElement = newImage;
+                    drawAll();
+                    hideLoadingIndicator();
+                })
+                .catch(error => {
+                    console.error("Failed to create image element:", error);
+                    hideLoadingIndicator();
+                });
+        };
+        reader.onerror = (error) => {
+            console.error("Error reading file:", error);
+            hideLoadingIndicator();
+        };
         reader.readAsDataURL(file);
     } else {
+        console.error("Invalid file type:", file.type);
         hideLoadingIndicator();
     }
 }
 
 function createImageElement(src, fileType) {
-    const img = new Image();
-    img.crossOrigin = "anonymous";  // Enable cross-origin image loading
-    img.onload = function() {
-        let croppedImage;
-        try {
-            croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
-        } catch (error) {
-            console.error("Error cropping image:", error);
-            croppedImage = img;  // Use the original image if cropping fails
-        }
-        
-        // Ensure minimum dimensions while maintaining aspect ratio
-        const minDimension = 100; // Minimum width or height in pixels
-        let width = croppedImage.width;
-        let height = croppedImage.height;
-        if (width < minDimension || height < minDimension) {
-            const aspectRatio = width / height;
-            if (width < height) {
-                width = minDimension;
-                height = width / aspectRatio;
-            } else {
-                height = minDimension;
-                width = height * aspectRatio;
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";  // Enable cross-origin image loading
+        img.onload = function() {
+            let croppedImage;
+            try {
+                croppedImage = fileType === 'image/png' ? cropTransparentEdges(img) : img;
+            } catch (error) {
+                console.error("Error cropping image:", error);
+                croppedImage = img;  // Use the original image if cropping fails
             }
-        }
-        
-        const newImage = {
-            type: 'image',
-            img: croppedImage,
-            width: width,
-            height: height,
-            x: (canvas.width - width) / 2,
-            y: (canvas.height - height) / 2,
-            angle: 0
+            
+            // Ensure minimum dimensions while maintaining aspect ratio
+            const minDimension = 100; // Minimum width or height in pixels
+            let width = croppedImage.width;
+            let height = croppedImage.height;
+            if (width < minDimension || height < minDimension) {
+                const aspectRatio = width / height;
+                if (width < height) {
+                    width = minDimension;
+                    height = width / aspectRatio;
+                } else {
+                    height = minDimension;
+                    width = height * aspectRatio;
+                }
+            }
+            
+            const newImage = {
+                type: 'image',
+                img: croppedImage,
+                width: width,
+                height: height,
+                x: (canvas.width - width) / 2,
+                y: (canvas.height - height) / 2,
+                angle: 0
+            };
+            resolve(newImage);
         };
-        elements.push(newImage);
-        selectedElement = newImage;
-        drawAll();
-        hideLoadingIndicator();
-    };
+        img.onerror = function(error) {
+            console.error("Error loading image:", error);
+            reject(error);
+        };
+        img.src = src;
+    });
+}
     img.onerror = function() {
         console.error("Error loading image from URL:", src);
         alert("Failed to load image. The image might be protected or the server doesn't allow cross-origin requests.");
@@ -683,11 +705,31 @@ function handleDrop(e) {
                     const imageUrl = extractImageUrlFromHtml(text);
                     if (imageUrl) {
                         console.log('Image URL detected:', imageUrl);
-                        createImageElement(imageUrl, 'image/jpeg');
+                        createImageElement(imageUrl, 'image/jpeg')
+                            .then(newImage => {
+                                elements.push(newImage);
+                                selectedElement = newImage;
+                                drawAll();
+                                hideLoadingIndicator();
+                            })
+                            .catch(error => {
+                                console.error("Failed to create image element:", error);
+                                hideLoadingIndicator();
+                            });
                         processed = true;
                     } else if (text.startsWith('data:image')) {
                         console.log('Image data URL detected');
-                        createImageElement(text, text.split(';')[0].split(':')[1]);
+                        createImageElement(text, text.split(';')[0].split(':')[1])
+                            .then(newImage => {
+                                elements.push(newImage);
+                                selectedElement = newImage;
+                                drawAll();
+                                hideLoadingIndicator();
+                            })
+                            .catch(error => {
+                                console.error("Failed to create image element:", error);
+                                hideLoadingIndicator();
+                            });
                         processed = true;
                     } else {
                         console.log('No image data detected in the string');
