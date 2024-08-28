@@ -574,7 +574,6 @@ function createImageElement(src, fileType) {
         hideLoadingIndicator();
     };
     img.src = src;
-}
 
 function cropTransparentEdges(img) {
     const tempCanvas = document.createElement('canvas');
