@@ -29,6 +29,8 @@ function setupEventListeners() {
     document.getElementById('addTextBtn').addEventListener('click', addText);
     document.getElementById('addImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+    document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('cameraInput').click());
+    document.getElementById('cameraInput').addEventListener('change', handleCameraCapture);
 
     setupTextControlListeners();
     setupLayerControlListeners();
@@ -145,6 +147,14 @@ function drawRotationHandle(element) {
 function handleImageUpload(e) {
     const files = e.target.files;
     Array.from(files).forEach(processUploadedFile);
+    e.target.value = ''; // Clear the file input
+}
+
+function handleCameraCapture(e) {
+    const file = e.target.files[0];
+    if (file) {
+        processUploadedFile(file);
+    }
     e.target.value = ''; // Clear the file input
 }
 
