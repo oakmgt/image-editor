@@ -55,18 +55,20 @@ function handleImageUpload(e) {
                     if (file.type === 'image/png') {
                         croppedImage = cropTransparentEdges(img);
                     }
-                    const newImage = {
-                        type: 'image',
-                        img: croppedImage,
-                        width: croppedImage.width,
-                        height: croppedImage.height,
-                        x: (canvas.width - croppedImage.width) / 2,
-                        y: (canvas.height - croppedImage.height) / 2,
-                        angle: 0
+                    croppedImage.onload = function() {
+                        const newImage = {
+                            type: 'image',
+                            img: croppedImage,
+                            width: croppedImage.width,
+                            height: croppedImage.height,
+                            x: (canvas.width - croppedImage.width) / 2,
+                            y: (canvas.height - croppedImage.height) / 2,
+                            angle: 0
+                        };
+                        elements.push(newImage);
+                        selectedElement = newImage;
+                        drawAll();
                     };
-                    elements.push(newImage);
-                    selectedElement = newImage;
-                    drawAll();
                 };
                 img.src = event.target.result;
             };
@@ -99,6 +101,12 @@ function cropTransparentEdges(img) {
                 maxY = Math.max(maxY, y);
             }
         }
+    }
+
+    // Check if the image is fully transparent
+    if (minX > maxX || minY > maxY) {
+        console.log("Image is fully transparent");
+        return img;
     }
 
     // Add a small padding
